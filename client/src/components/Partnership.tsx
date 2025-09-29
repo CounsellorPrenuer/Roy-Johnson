@@ -126,7 +126,7 @@ export default function Partnership() {
                     {stat.icon}
                   </motion.div>
                   <motion.h3 
-                    className="fluid-text-3xl font-bold text-brand-teal mb-3"
+                    className="fluid-text-2xl font-bold text-brand-teal mb-3"
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
                     transition={{ duration: 0.5, delay: 0.8 + index * 0.1 }}
