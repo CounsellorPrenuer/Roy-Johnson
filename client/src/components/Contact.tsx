@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, Phone, Linkedin, Instagram, Send, MapPin, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -15,7 +17,6 @@ export default function Contact() {
     phone: '',
     message: ''
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   
   const { ref, inView } = useInView({
@@ -23,24 +24,42 @@ export default function Contact() {
     triggerOnce: true,
   });
 
+  const contactMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const response = await apiRequest('POST', '/api/contact', data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Message sent successfully!",
+        description: "Thank you for your inquiry. Roy will get back to you within 24 hours.",
+      });
+      setFormData({ name: '', email: '', phone: '', message: '' });
+    },
+    onError: (error: Error) => {
+      console.error('Contact form error:', error);
+      toast({
+        title: "Failed to send message",
+        description: "There was an error sending your message. Please try again or contact us directly.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    console.log('Form submitted:', formData);
-    
-    // Show success message
-    toast({
-      title: "Message sent successfully!",
-      description: "Thank you for your inquiry. Roy will get back to you within 24 hours.",
-    });
-    
-    // Reset form
-    setFormData({ name: '', email: '', phone: '', message: '' });
-    setIsSubmitting(false);
+    // Basic validation
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      toast({
+        title: "Please fill in all required fields",
+        description: "Name, email, and message are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    contactMutation.mutate(formData);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -224,11 +243,11 @@ export default function Contact() {
                   >
                     <Button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={contactMutation.isPending}
                       className="w-full bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white font-semibold py-4 fluid-text-base relative overflow-hidden"
                       data-testid="button-send-message"
                     >
-                      {isSubmitting ? (
+                      {contactMutation.isPending ? (
                         <motion.div
                           animate={{ rotate: 360 }}
                           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
