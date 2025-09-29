@@ -183,34 +183,50 @@ export default function Pricing() {
 
   const plans = [
     {
-      title: 'Ascend',
-      price: '₹6,499',
-      duration: 'plan',
-      description: 'For College Graduates',
+      title: 'Clarity Session',
+      price: '₹4,999',
+      duration: 'session',
+      description: '90-minute deep-dive session with comprehensive career assessment and personalized action plan.',
       features: [
-        'Psychometric assessment to measure your interests, personality and abilities',
-        '1 career coaching session for specialisation/job selection',
-        'Lifetime access to Knowledge Gateway',
-        'Pre-recorded webinars by industry experts'
+        'Comprehensive career assessment',
+        'Personalized action plan',
+        'Industry insights and trends',
+        'Goal setting framework',
+        'Follow-up resource guide'
       ],
-      buttonText: 'Choose Ascend'
+      buttonText: 'Book Session'
     },
     {
-      title: 'Ascend Plus',
-      price: '₹10,599',
-      duration: 'plan',
-      description: 'For College Graduates',
+      title: 'Career Accelerator',
+      price: '₹19,999',
+      duration: 'package',
+      description: '4 comprehensive sessions including resume optimization, LinkedIn revamp, and interview preparation.',
       features: [
-        'Psychometric assessment to measure your interests, personality and abilities',
-        '3 career coaching sessions',
-        'Lifetime access to Knowledge Gateway',
-        'Guidance on Masters\' admissions in India and abroad',
-        'CV reviews during internships/graduation',
-        'Guidance until you get into the job you love',
-        'Career helpline access'
+        '4 one-on-one coaching sessions',
+        'Resume and cover letter optimization',
+        'LinkedIn profile transformation',
+        'Interview preparation and practice',
+        'Salary negotiation strategies',
+        '30-day email support'
       ],
       isPopular: true,
-      buttonText: 'Choose Ascend Plus'
+      buttonText: 'Get Started'
+    },
+    {
+      title: 'Executive Package',
+      price: '₹29,999',
+      duration: 'package',
+      description: '6 sessions focused on long-term career strategy with ongoing support for senior professionals.',
+      features: [
+        '6 executive coaching sessions',
+        'Long-term career strategy development',
+        'Leadership skills assessment',
+        'Executive presence coaching',
+        'Network building strategies',
+        '90-day ongoing support',
+        'Priority scheduling'
+      ],
+      buttonText: 'Invest Now'
     }
   ];
 
@@ -275,7 +291,7 @@ export default function Pricing() {
           </motion.p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto items-center">
           {plans.map((plan, index) => (
             <PricingCard
               key={index}
