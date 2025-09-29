@@ -10,6 +10,7 @@ import Services from "@/components/Services";
 import About from "@/components/About";
 import Pricing from "@/components/Pricing";
 import Contact from "@/components/Contact";
+import Partnership from "@/components/Partnership";
 import Footer from "@/components/Footer";
 
 function Home() {
@@ -21,6 +22,7 @@ function Home() {
       <About />
       <Pricing />
       <Contact />
+      <Partnership />
       <Footer />
     </div>
   );
