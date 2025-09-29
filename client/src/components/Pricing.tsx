@@ -28,9 +28,9 @@ function PricingCard({ title, price, duration, description, features, isPopular,
       initial={{ opacity: 0, y: 50 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
       transition={{ 
-        duration: 0.3, 
-        delay: index * 0.1,
-        ease: "easeOut"
+        duration: 0.5, 
+        delay: index * 0.15,
+        ease: [0.25, 0.46, 0.45, 0.94]
       }}
       whileHover={{ 
         y: -10,
@@ -67,7 +67,7 @@ function PricingCard({ title, price, duration, description, features, isPopular,
             className="absolute top-0 left-0 right-0"
             initial={{ y: -20, opacity: 0 }}
             animate={inView ? { y: 0, opacity: 1 } : { y: -20, opacity: 0 }}
-            transition={{ duration: 0.2, delay: index * 0.1 + 0.1 }}
+            transition={{ duration: 0.4, delay: index * 0.15 + 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             <div className="bg-gradient-to-r from-brand-teal to-brand-aqua text-white text-center py-3 text-sm font-medium relative overflow-hidden">
               <motion.div
@@ -91,7 +91,7 @@ function PricingCard({ title, price, duration, description, features, isPopular,
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.2, delay: index * 0.1 + 0.15 }}
+            transition={{ duration: 0.4, delay: index * 0.15 + 0.3, ease: [0.68, -0.55, 0.265, 1.55] }}
           >
             <CardTitle className="fluid-text-2xl font-bold text-brand-teal mb-6">{title}</CardTitle>
             <div className="mb-6">
@@ -125,8 +125,9 @@ function PricingCard({ title, price, duration, description, features, isPopular,
                 initial={{ opacity: 0, x: -20 }}
                 animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
                 transition={{ 
-                  duration: 0.2, 
-                  delay: index * 0.1 + featureIndex * 0.03 + 0.2
+                  duration: 0.3, 
+                  delay: index * 0.15 + featureIndex * 0.06 + 0.4,
+                  ease: [0.25, 0.46, 0.45, 0.94]
                 }}
               >
                 <motion.div

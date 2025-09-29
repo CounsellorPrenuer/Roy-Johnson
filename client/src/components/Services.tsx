@@ -24,9 +24,9 @@ function ServiceCard({ icon, title, description, features, index }: ServiceCardP
       initial={{ opacity: 0, y: 50 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
       transition={{ 
-        duration: 0.3, 
-        delay: index * 0.1,
-        ease: "easeOut"
+        duration: 0.5, 
+        delay: index * 0.15,
+        ease: [0.25, 0.46, 0.45, 0.94]
       }}
       whileHover={{ 
         y: -10,
@@ -64,8 +64,9 @@ function ServiceCard({ icon, title, description, features, index }: ServiceCardP
                 initial={{ opacity: 0, x: -20 }}
                 animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
                 transition={{ 
-                  duration: 0.2, 
-                  delay: index * 0.1 + featureIndex * 0.03 + 0.1
+                  duration: 0.3, 
+                  delay: index * 0.15 + featureIndex * 0.06 + 0.2,
+                  ease: [0.25, 0.46, 0.45, 0.94]
                 }}
               >
                 <motion.div 
@@ -199,13 +200,13 @@ export default function Services() {
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           <motion.h2 
             className="fluid-text-5xl font-bold text-brand-teal mb-6"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
+            transition={{ duration: 0.4, delay: 0.2, ease: [0.68, -0.55, 0.265, 1.55] }}
           >
             How We Help You Succeed
           </motion.h2>
@@ -213,7 +214,7 @@ export default function Services() {
             className="fluid-text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.3, delay: 0.15 }}
+            transition={{ duration: 0.4, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             Comprehensive career guidance tailored to your unique professional journey and aspirations.
           </motion.p>

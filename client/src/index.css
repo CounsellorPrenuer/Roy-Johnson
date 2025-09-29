@@ -82,12 +82,12 @@
   --radius: .5rem; /* 8px */
   
   /* Motion Tokens */
-  --duration-fast: 100ms;
-  --duration-normal: 150ms;
-  --duration-slow: 200ms;
-  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-entrance: cubic-bezier(0, 0, 0.2, 1);
-  --ease-emphasis: cubic-bezier(0.4, 0, 0.6, 1);
+  --duration-fast: 200ms;
+  --duration-normal: 300ms;
+  --duration-slow: 400ms;
+  --ease-standard: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-entrance: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-emphasis: cubic-bezier(0.68, -0.55, 0.265, 1.55);
   
   /* Enhanced Shadows */
   --shadow-2xs: 0px 2px 0px 0px hsl(210 15% 18% / 0.03);

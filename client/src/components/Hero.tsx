@@ -114,8 +114,8 @@ export default function Hero() {
     visible: {
       opacity: 1,
       transition: {
-        duration: 0.3,
-        staggerChildren: 0.1,
+        duration: 0.5,
+        staggerChildren: 0.15,
       },
     },
   };
@@ -126,8 +126,8 @@ export default function Hero() {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.3,
-        ease: "easeOut",
+        duration: 0.5,
+        ease: [0.25, 0.46, 0.45, 0.94],
       },
     },
   };
@@ -138,9 +138,9 @@ export default function Hero() {
       opacity: 1,
       scale: 1,
       transition: {
-        duration: 0.2,
-        ease: "easeOut",
-        staggerChildren: 0.05,
+        duration: 0.4,
+        ease: [0.25, 0.46, 0.45, 0.94],
+        staggerChildren: 0.08,
       },
     },
   };
@@ -203,7 +203,7 @@ export default function Hero() {
                 className="mb-2 bg-gradient-to-r from-brand-teal via-brand-teal to-brand-aqua bg-clip-text text-transparent"
                 initial={{ opacity: 0, x: -50 }}
                 animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
+                transition={{ duration: 0.5, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
                 Chart Your
               </motion.div>
@@ -211,7 +211,7 @@ export default function Hero() {
                 className="mb-2 bg-gradient-to-r from-brand-teal via-brand-aqua to-brand-teal bg-clip-text text-transparent"
                 initial={{ opacity: 0, x: 50 }}
                 animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
-                transition={{ duration: 0.3, delay: 0.15 }}
+                transition={{ duration: 0.5, delay: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
                 Career
               </motion.div>
@@ -219,7 +219,7 @@ export default function Hero() {
                 className="mb-2 bg-gradient-to-r from-brand-aqua via-brand-teal to-brand-aqua bg-clip-text text-transparent"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
+                transition={{ duration: 0.5, delay: 0.5, ease: [0.68, -0.55, 0.265, 1.55] }}
               >
                 Trajectory
               </motion.div>
@@ -227,7 +227,7 @@ export default function Hero() {
                 className="fluid-text-4xl text-brand-teal/80 font-medium"
                 initial={{ opacity: 0, y: 20 }}
                 animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                transition={{ duration: 0.3, delay: 0.25 }}
+                transition={{ duration: 0.4, delay: 0.65, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
                 with Clarity
               </motion.div>
@@ -309,10 +309,11 @@ export default function Hero() {
                   initial={{ scale: 0 }}
                   animate={inView ? { scale: 1 } : { scale: 0 }}
                   transition={{ 
-                    duration: 0.2, 
-                    delay: 0.3 + index * 0.05,
+                    duration: 0.4, 
+                    delay: 0.8 + index * 0.1,
                     type: "spring",
-                    stiffness: 200
+                    stiffness: 160,
+                    damping: 12
                   }}
                 >
                   {stat.number}
