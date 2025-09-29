@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
+import DiscoveryCallModal from './DiscoveryCallModal';
 // TODO: Fix image import path after build setup
 const logoPath = "/attached_assets/logo_1759141877823.png";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -95,7 +97,7 @@ export default function Navbar() {
               whileTap={{ scale: 0.95 }}
             >
               <Button
-                onClick={() => console.log('Book Discovery Call clicked')}
+                onClick={() => setIsModalOpen(true)}
                 className="relative overflow-hidden bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white font-medium px-6 py-2 shadow-lg hover:shadow-xl transition-all duration-300"
                 data-testid="button-book-call"
               >
@@ -189,7 +191,7 @@ export default function Navbar() {
                 >
                   <Button
                     onClick={() => {
-                      console.log('Book Discovery Call clicked');
+                      setIsModalOpen(true);
                       setIsMobileMenuOpen(false);
                     }}
                     className="bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white font-medium w-full"
@@ -203,6 +205,12 @@ export default function Navbar() {
           )}
         </AnimatePresence>
       </div>
+      
+      {/* Discovery Call Modal */}
+      <DiscoveryCallModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </motion.nav>
   );
 }
