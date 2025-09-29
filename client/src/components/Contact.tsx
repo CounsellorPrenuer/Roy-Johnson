@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Phone, Linkedin, Instagram } from 'lucide-react';
+import { Mail, Phone, Linkedin, Instagram, Send, MapPin, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Contact() {
@@ -13,10 +15,21 @@ export default function Contact() {
     phone: '',
     message: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  
+  const { ref, inView } = useInView({
+    threshold: 0.1,
+    triggerOnce: true,
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simulate form submission
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     console.log('Form submitted:', formData);
     
     // Show success message
@@ -27,6 +40,7 @@ export default function Contact() {
     
     // Reset form
     setFormData({ name: '', email: '', phone: '', message: '' });
+    setIsSubmitting(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -36,146 +50,294 @@ export default function Contact() {
 
   const contactInfo = [
     {
-      icon: <Mail className="w-5 h-5" />,
+      icon: <Mail className="w-6 h-6" />,
       label: 'Email',
       value: 'royjohns@gmail.com',
-      href: 'mailto:royjohns@gmail.com'
+      href: 'mailto:royjohns@gmail.com',
+      description: 'Send us an email'
     },
     {
-      icon: <Phone className="w-5 h-5" />,
+      icon: <Phone className="w-6 h-6" />,
       label: 'Phone',
       value: '+91 80759 15530',
-      href: 'tel:+918075915530'
+      href: 'tel:+918075915530',
+      description: 'Call us directly'
     },
     {
-      icon: <Linkedin className="w-5 h-5" />,
+      icon: <Linkedin className="w-6 h-6" />,
       label: 'LinkedIn',
       value: 'Connect with Roy',
-      href: 'https://www.linkedin.com/in/roy-johnson-10355b4/'
+      href: 'https://www.linkedin.com/in/roy-johnson-10355b4/',
+      description: 'Professional network'
     },
     {
-      icon: <Instagram className="w-5 h-5" />,
+      icon: <Instagram className="w-6 h-6" />,
       label: 'Instagram',
       value: '@careerplanspro',
-      href: 'https://www.instagram.com/careerplanspro'
+      href: 'https://www.instagram.com/careerplanspro',
+      description: 'Follow our journey'
+    }
+  ];
+  
+  const additionalInfo = [
+    {
+      icon: <MapPin className="w-5 h-5" />,
+      label: 'Location',
+      value: 'India (Remote Available)'
+    },
+    {
+      icon: <Clock className="w-5 h-5" />,
+      label: 'Response Time',
+      value: 'Within 24 hours'
     }
   ];
 
   return (
-    <section id="contact" className="py-16 md:py-24 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-brand-teal mb-6">
-            Let's Start Your Journey
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+    <section id="contact" className="py-16 md:py-24 bg-background relative overflow-hidden">
+      {/* Animated background */}
+      <motion.div
+        className="absolute top-1/4 left-0 w-80 h-80 bg-gradient-to-r from-brand-teal/10 to-transparent rounded-full blur-3xl"
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.3, 0.5, 0.3],
+          x: [0, 30, 0]
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <motion.div 
+          ref={ref}
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.h2 
+            className="fluid-text-5xl font-bold mb-6"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <span className="bg-gradient-to-r from-brand-teal via-brand-aqua to-brand-teal bg-clip-text text-transparent">
+              Let's Start Your Journey
+            </span>
+          </motion.h2>
+          <motion.p 
+            className="fluid-text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
             Ready to take the next step in your career? Get in touch and let's discuss how we can help you achieve your goals.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Form */}
-          <Card className="bg-background/80 backdrop-blur-sm border-brand-aqua/20">
-            <CardHeader>
-              <CardTitle className="text-2xl text-brand-teal">Send us a message</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <Input
-                    name="name"
-                    placeholder="Your Name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    className="border-brand-aqua/20 focus:border-brand-aqua"
-                    data-testid="input-name"
-                  />
-                </div>
-                <div>
-                  <Input
-                    name="email"
-                    type="email"
-                    placeholder="Your Email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                    className="border-brand-aqua/20 focus:border-brand-aqua"
-                    data-testid="input-email"
-                  />
-                </div>
-                <div>
-                  <Input
-                    name="phone"
-                    type="tel"
-                    placeholder="Your Phone Number"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="border-brand-aqua/20 focus:border-brand-aqua"
-                    data-testid="input-phone"
-                  />
-                </div>
-                <div>
-                  <Textarea
-                    name="message"
-                    placeholder="Tell us about your career goals and how we can help..."
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    required
-                    rows={5}
-                    className="border-brand-aqua/20 focus:border-brand-aqua resize-none"
-                    data-testid="textarea-message"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white font-semibold py-3"
-                  data-testid="button-send-message"
-                >
-                  Send Message
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* Contact Information */}
-          <div className="space-y-8">
-            <Card className="bg-gradient-to-br from-brand-teal to-brand-aqua text-white">
-              <CardContent className="p-8">
-                <h3 className="text-2xl font-bold mb-4">Get in Touch</h3>
-                <p className="text-white/90 leading-relaxed">
-                  Ready to transform your career? Reach out today and let's discuss your professional goals and how Career Plans can help you achieve them.
-                </p>
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+          >
+            <Card className="glass-card border-brand-aqua/20 hover:border-brand-aqua/40 transition-all duration-300 hover:shadow-xl">
+              <CardHeader>
+                <CardTitle className="fluid-text-2xl text-brand-teal flex items-center gap-2">
+                  <Send className="w-6 h-6" />
+                  Send us a message
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                    transition={{ duration: 0.5, delay: 0.8 }}
+                  >
+                    <Input
+                      name="name"
+                      placeholder="Your Name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      className="glass-card border-brand-aqua/20 focus:border-brand-aqua focus:ring-brand-aqua/20 transition-all duration-300"
+                      data-testid="input-name"
+                    />
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                    transition={{ duration: 0.5, delay: 0.9 }}
+                  >
+                    <Input
+                      name="email"
+                      type="email"
+                      placeholder="Your Email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                      className="glass-card border-brand-aqua/20 focus:border-brand-aqua focus:ring-brand-aqua/20 transition-all duration-300"
+                      data-testid="input-email"
+                    />
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                    transition={{ duration: 0.5, delay: 1 }}
+                  >
+                    <Input
+                      name="phone"
+                      type="tel"
+                      placeholder="Your Phone Number"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="glass-card border-brand-aqua/20 focus:border-brand-aqua focus:ring-brand-aqua/20 transition-all duration-300"
+                      data-testid="input-phone"
+                    />
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                    transition={{ duration: 0.5, delay: 1.1 }}
+                  >
+                    <Textarea
+                      name="message"
+                      placeholder="Tell us about your career goals and how we can help..."
+                      value={formData.message}
+                      onChange={handleInputChange}
+                      required
+                      rows={5}
+                      className="glass-card border-brand-aqua/20 focus:border-brand-aqua focus:ring-brand-aqua/20 resize-none transition-all duration-300"
+                      data-testid="textarea-message"
+                    />
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                    transition={{ duration: 0.5, delay: 1.2 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white font-semibold py-4 fluid-text-base relative overflow-hidden"
+                      data-testid="button-send-message"
+                    >
+                      {isSubmitting ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                        />
+                      ) : (
+                        <>
+                          <span className="relative z-10 flex items-center justify-center gap-2">
+                            Send Message
+                            <Send className="w-4 h-4" />
+                          </span>
+                          <motion.div
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                            animate={{ x: ['-100%', '100%'] }}
+                            transition={{
+                              duration: 1.5,
+                              repeat: Infinity,
+                              repeatDelay: 2,
+                              ease: "easeInOut"
+                            }}
+                          />
+                        </>
+                      )}
+                    </Button>
+                  </motion.div>
+                </form>
               </CardContent>
             </Card>
+          </motion.div>
+
+          {/* Contact Information */}
+          <motion.div 
+            className="space-y-8"
+            initial={{ opacity: 0, x: 50 }}
+            animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+          >
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="bg-gradient-to-br from-brand-teal to-brand-aqua text-white relative overflow-hidden">
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+                <CardContent className="p-8 relative z-10">
+                  <h3 className="fluid-text-2xl font-bold mb-4">Get in Touch</h3>
+                  <p className="text-white/90 leading-relaxed fluid-text-base">
+                    Ready to transform your career? Reach out today and let's discuss your professional goals and how Career Plans can help you achieve them.
+                  </p>
+                  
+                  <div className="mt-6 grid grid-cols-2 gap-4">
+                    {additionalInfo.map((info, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div className="text-white/80">{info.icon}</div>
+                        <div>
+                          <div className="text-xs text-white/70">{info.label}</div>
+                          <div className="text-sm font-medium">{info.value}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {contactInfo.map((item, index) => (
-                <a
+                <motion.a
                   key={index}
                   href={item.href}
                   target={item.href.startsWith('http') ? '_blank' : undefined}
                   rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                  className="block p-4 bg-background/80 backdrop-blur-sm border border-brand-aqua/20 rounded-lg hover:border-brand-aqua/40 hover:shadow-lg transition-all duration-300 hover:scale-105"
+                  className="block p-6 glass-card border border-brand-aqua/20 rounded-xl hover:border-brand-aqua/40 hover:shadow-lg transition-all duration-300 group"
                   data-testid={`link-${item.label.toLowerCase()}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                  transition={{ duration: 0.5, delay: 1 + index * 0.1 }}
+                  whileHover={{ y: -5, scale: 1.02 }}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="text-brand-teal">
+                  <div className="flex items-start gap-4">
+                    <motion.div 
+                      className="text-brand-teal group-hover:text-brand-aqua transition-colors duration-300 p-2 bg-brand-teal/10 rounded-lg group-hover:bg-brand-aqua/10"
+                      whileHover={{ rotate: 5 }}
+                    >
                       {item.icon}
-                    </div>
-                    <div>
-                      <div className="font-medium text-brand-teal text-sm">
+                    </motion.div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-brand-teal group-hover:text-brand-aqua transition-colors duration-300 fluid-text-sm mb-1">
                         {item.label}
                       </div>
-                      <div className="text-muted-foreground text-sm">
+                      <div className="text-muted-foreground fluid-text-xs mb-1">
                         {item.value}
+                      </div>
+                      <div className="text-muted-foreground/70 fluid-text-xs">
+                        {item.description}
                       </div>
                     </div>
                   </div>
-                </a>
+                </motion.a>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

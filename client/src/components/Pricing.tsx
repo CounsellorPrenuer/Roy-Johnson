@@ -1,7 +1,9 @@
+import { motion } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star } from 'lucide-react';
+import { Check, Star, Sparkles } from 'lucide-react';
 
 interface PricingCardProps {
   title: string;
@@ -11,62 +13,173 @@ interface PricingCardProps {
   features: string[];
   isPopular?: boolean;
   buttonText: string;
+  index: number;
 }
 
-function PricingCard({ title, price, duration, description, features, isPopular, buttonText }: PricingCardProps) {
+function PricingCard({ title, price, duration, description, features, isPopular, buttonText, index }: PricingCardProps) {
+  const { ref, inView } = useInView({
+    threshold: 0.1,
+    triggerOnce: true,
+  });
+
   return (
-    <Card className={`relative overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl ${
-      isPopular 
-        ? 'ring-2 ring-brand-aqua bg-gradient-to-br from-background to-brand-light/50' 
-        : 'bg-background/80 backdrop-blur-sm hover:bg-background'
-    }`}>
-      {isPopular && (
-        <div className="absolute top-0 left-0 right-0">
-          <div className="bg-gradient-to-r from-brand-teal to-brand-aqua text-white text-center py-2 text-sm font-medium">
-            <Star className="w-4 h-4 inline mr-1" />
-            Most Popular
-          </div>
-        </div>
-      )}
-      
-      <CardHeader className={`text-center ${isPopular ? 'pt-12' : 'pt-6'}`}>
-        <CardTitle className="text-2xl font-bold text-brand-teal">{title}</CardTitle>
-        <div className="mt-4">
-          <span className="text-4xl font-bold text-brand-teal">{price}</span>
-          <span className="text-muted-foreground">/{duration}</span>
-        </div>
-        <CardDescription className="mt-4 text-muted-foreground leading-relaxed">
-          {description}
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="pt-0">
-        <ul className="space-y-3 mb-8">
-          {features.map((feature, index) => (
-            <li key={index} className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-brand-aqua flex-shrink-0 mt-0.5" />
-              <span className="text-muted-foreground">{feature}</span>
-            </li>
-          ))}
-        </ul>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 50 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+      transition={{ 
+        duration: 0.6, 
+        delay: index * 0.2,
+        ease: "easeOut"
+      }}
+      whileHover={{ 
+        y: -10,
+        transition: { duration: 0.3 }
+      }}
+      className={`relative ${isPopular ? 'scale-110 z-10' : ''}`}
+    >
+      <Card className={`relative overflow-hidden transition-all duration-500 hover:shadow-2xl h-full ${
+        isPopular 
+          ? 'glass-card ring-2 ring-brand-aqua shadow-xl' 
+          : 'glass-card border-brand-aqua/20 hover:border-brand-aqua/40'
+      }`}>
+        {/* Animated gradient background for popular card */}
+        {isPopular && (
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-br from-brand-teal/5 via-brand-aqua/5 to-brand-teal/5"
+            animate={{
+              background: [
+                'linear-gradient(45deg, rgba(0,55,82,0.05) 0%, rgba(64,143,164,0.05) 50%, rgba(0,55,82,0.05) 100%)',
+                'linear-gradient(45deg, rgba(64,143,164,0.05) 0%, rgba(0,55,82,0.05) 50%, rgba(64,143,164,0.05) 100%)',
+                'linear-gradient(45deg, rgba(0,55,82,0.05) 0%, rgba(64,143,164,0.05) 50%, rgba(0,55,82,0.05) 100%)'
+              ]
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+        )}
         
-        <Button
-          className={`w-full font-semibold py-3 ${
-            isPopular
-              ? 'bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white'
-              : 'bg-background border-2 border-brand-aqua text-brand-teal hover:bg-brand-aqua/10'
-          }`}
-          onClick={() => console.log(`${buttonText} clicked for ${title}`)}
-          data-testid={`button-${title.toLowerCase().replace(/\s+/g, '-')}`}
-        >
-          {buttonText}
-        </Button>
-      </CardContent>
-    </Card>
+        {isPopular && (
+          <motion.div 
+            className="absolute top-0 left-0 right-0"
+            initial={{ y: -20, opacity: 0 }}
+            animate={inView ? { y: 0, opacity: 1 } : { y: -20, opacity: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.2 + 0.3 }}
+          >
+            <div className="bg-gradient-to-r from-brand-teal to-brand-aqua text-white text-center py-3 text-sm font-medium relative overflow-hidden">
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                animate={{ x: ['-100%', '100%'] }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatDelay: 3,
+                  ease: "easeInOut"
+                }}
+              />
+              <Star className="w-4 h-4 inline mr-2" />
+              Most Popular
+              <Sparkles className="w-4 h-4 inline ml-2" />
+            </div>
+          </motion.div>
+        )}
+        
+        <CardHeader className={`text-center relative z-10 ${isPopular ? 'pt-16' : 'pt-6'}`}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.5, delay: index * 0.2 + 0.4 }}
+          >
+            <CardTitle className="fluid-text-2xl font-bold text-brand-teal mb-6">{title}</CardTitle>
+            <div className="mb-6">
+              <motion.span 
+                className="fluid-text-4xl font-bold bg-gradient-to-r from-brand-teal to-brand-aqua bg-clip-text text-transparent"
+                animate={isPopular ? {
+                  scale: [1, 1.05, 1]
+                } : {}}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                {price}
+              </motion.span>
+              <span className="text-muted-foreground fluid-text-base">/{duration}</span>
+            </div>
+            <CardDescription className="text-muted-foreground leading-relaxed fluid-text-sm">
+              {description}
+            </CardDescription>
+          </motion.div>
+        </CardHeader>
+        
+        <CardContent className="pt-0 relative z-10">
+          <ul className="space-y-4 mb-8">
+            {features.map((feature, featureIndex) => (
+              <motion.li 
+                key={featureIndex} 
+                className="flex items-start gap-3"
+                initial={{ opacity: 0, x: -20 }}
+                animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                transition={{ 
+                  duration: 0.4, 
+                  delay: index * 0.2 + featureIndex * 0.1 + 0.6
+                }}
+              >
+                <motion.div
+                  whileHover={{ scale: 1.2, rotate: 360 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Check className="w-5 h-5 text-brand-aqua flex-shrink-0 mt-0.5" />
+                </motion.div>
+                <span className="text-muted-foreground fluid-text-sm">{feature}</span>
+              </motion.li>
+            ))}
+          </ul>
+          
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Button
+              className={`w-full font-semibold py-4 fluid-text-base relative overflow-hidden ${
+                isPopular
+                  ? 'bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white shadow-lg'
+                  : 'glass-card border-2 border-brand-aqua text-brand-teal hover:bg-brand-aqua/10'
+              }`}
+              onClick={() => console.log(`${buttonText} clicked for ${title}`)}
+              data-testid={`button-${title.toLowerCase().replace(/\s+/g, '-')}`}
+            >
+              <span className="relative z-10">{buttonText}</span>
+              {isPopular && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    repeatDelay: 2,
+                    ease: "easeInOut"
+                  }}
+                />
+              )}
+            </Button>
+          </motion.div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
 export default function Pricing() {
+  const { ref, inView } = useInView({
+    threshold: 0.1,
+    triggerOnce: true,
+  });
+
   const plans = [
     {
       title: 'Clarity Session',
@@ -117,18 +230,67 @@ export default function Pricing() {
   ];
 
   return (
-    <section id="pricing" className="py-16 md:py-24 bg-gradient-to-br from-brand-light/30 via-background to-brand-light/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-brand-teal mb-6">
-            Invest in Your Future
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Choose the perfect plan to accelerate your career growth and achieve your professional goals.
-          </p>
-        </div>
+    <section id="pricing" className="py-16 md:py-24 relative overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-light/30 via-background to-brand-light/20" />
+        <motion.div
+          className="absolute top-1/4 right-0 w-96 h-96 bg-gradient-to-br from-brand-aqua/20 to-transparent rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.2, 0.4, 0.2],
+            x: [0, 50, 0]
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div
+          className="absolute bottom-0 left-1/4 w-80 h-80 bg-gradient-to-tr from-brand-teal/15 to-transparent rounded-full blur-3xl"
+          animate={{
+            scale: [1.2, 1, 1.2],
+            opacity: [0.3, 0.6, 0.3],
+            y: [0, -30, 0]
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <motion.div 
+          ref={ref}
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.h2 
+            className="fluid-text-5xl font-bold mb-6"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <span className="bg-gradient-to-r from-brand-teal via-brand-aqua to-brand-teal bg-clip-text text-transparent">
+              Invest in Your Future
+            </span>
+          </motion.h2>
+          <motion.p 
+            className="fluid-text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            Choose the perfect plan to accelerate your career growth and achieve your professional goals.
+          </motion.p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto items-center">
           {plans.map((plan, index) => (
             <PricingCard
               key={index}
@@ -139,24 +301,49 @@ export default function Pricing() {
               features={plan.features}
               isPopular={plan.isPopular}
               buttonText={plan.buttonText}
+              index={index}
             />
           ))}
         </div>
 
         {/* Trust indicators */}
-        <div className="mt-16 text-center">
-          <div className="inline-flex items-center gap-2 text-muted-foreground mb-4">
-            <Badge variant="outline" className="border-brand-aqua/20 text-brand-teal">
-              30-day satisfaction guarantee
-            </Badge>
-            <Badge variant="outline" className="border-brand-aqua/20 text-brand-teal">
-              Flexible scheduling
-            </Badge>
+        <motion.div 
+          className="mt-20 text-center"
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 0.8, delay: 1 }}
+        >
+          <div className="flex flex-wrap justify-center gap-4 mb-6">
+            {[
+              "30-day satisfaction guarantee",
+              "Flexible scheduling",
+              "Online & In-person options",
+              "Certified coaching"
+            ].map((text, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.5, delay: 1.2 + index * 0.1 }}
+              >
+                <Badge 
+                  variant="outline" 
+                  className="glass-card border-brand-aqua/30 text-brand-teal hover:border-brand-aqua/50 transition-all duration-300 px-4 py-2"
+                >
+                  {text}
+                </Badge>
+              </motion.div>
+            ))}
           </div>
-          <p className="text-sm text-muted-foreground">
+          <motion.p 
+            className="fluid-text-sm text-muted-foreground"
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: 0.8, delay: 1.6 }}
+          >
             All sessions can be conducted online or in-person based on your preference.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
       </div>
     </section>
   );

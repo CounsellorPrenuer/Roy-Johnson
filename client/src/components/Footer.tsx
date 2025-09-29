@@ -1,9 +1,16 @@
-import { Linkedin, Instagram } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
+import { Linkedin, Instagram, ArrowUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 // TODO: Fix image import path after build setup
 const logoPath = "/attached_assets/logo_1759131412190.png";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const { ref, inView } = useInView({
+    threshold: 0.1,
+    triggerOnce: true,
+  });
 
   const footerLinks = {
     services: [
@@ -22,12 +29,12 @@ export default function Footer() {
       {
         name: 'LinkedIn',
         href: 'https://www.linkedin.com/in/roy-johnson-10355b4/',
-        icon: <Linkedin className="w-5 h-5" />
+        icon: <Linkedin className="w-6 h-6" />
       },
       {
         name: 'Instagram',
         href: 'https://www.instagram.com/careerplanspro',
-        icon: <Instagram className="w-5 h-5" />
+        icon: <Instagram className="w-6 h-6" />
       }
     ]
   };
@@ -40,95 +47,220 @@ export default function Footer() {
       }
     }
   };
+  
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
-    <footer className="bg-brand-teal text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <motion.footer 
+      ref={ref}
+      className="bg-gradient-to-br from-brand-teal via-brand-teal to-brand-aqua text-white relative overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={inView ? { opacity: 1 } : { opacity: 0 }}
+      transition={{ duration: 0.8 }}
+    >
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.1, 0.2, 0.1]
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div
+          className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-white/5 to-transparent rounded-full blur-3xl"
+          animate={{
+            scale: [1.2, 1, 1.2],
+            opacity: [0.1, 0.3, 0.1]
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+      </div>
+      
+      {/* Back to top button */}
+      <motion.div 
+        className="absolute top-8 right-8"
+        initial={{ scale: 0 }}
+        animate={inView ? { scale: 1 } : { scale: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+      >
+        <motion.div
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+        >
+          <Button
+            onClick={scrollToTop}
+            size="icon"
+            variant="outline"
+            className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 backdrop-blur-sm"
+          >
+            <ArrowUp className="w-4 h-4" />
+          </Button>
+        </motion.div>
+      </motion.div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Section */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
+          <motion.div 
+            className="lg:col-span-2"
+            initial={{ opacity: 0, y: 30 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <motion.div 
+              className="flex items-center gap-3 mb-6"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
               <img
                 src={logoPath}
                 alt="Career Plans Logo"
-                className="h-10 w-auto brightness-0 invert"
+                className="h-12 w-auto brightness-0 invert"
                 data-testid="img-footer-logo"
               />
-            </div>
-            <p className="text-white/80 leading-relaxed mb-6 max-w-md">
+            </motion.div>
+            <motion.p 
+              className="text-white/80 leading-relaxed mb-8 max-w-md fluid-text-base"
+              initial={{ opacity: 0 }}
+              animate={inView ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
               Empowering professionals to take control of their careers with strategic guidance, 
               personalized coaching, and proven methodologies for sustainable success.
-            </p>
+            </motion.p>
             <div className="flex gap-4">
               {footerLinks.social.map((social, index) => (
-                <a
+                <motion.a
                   key={index}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors duration-300"
+                  className="p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-all duration-300 group backdrop-blur-sm"
                   data-testid={`link-${social.name.toLowerCase()}`}
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
+                  transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  {social.icon}
-                </a>
+                  <div className="group-hover:scale-110 transition-transform duration-200">
+                    {social.icon}
+                  </div>
+                </motion.a>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Services Links */}
-          <div>
-            <h3 className="font-semibold text-lg mb-6">Services</h3>
-            <ul className="space-y-3">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <h3 className="font-bold fluid-text-lg mb-6 text-white">Services</h3>
+            <ul className="space-y-4">
               {footerLinks.services.map((link, index) => (
-                <li key={index}>
-                  <button
+                <motion.li 
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}
+                >
+                  <motion.button
                     onClick={() => scrollToSection(link.href)}
-                    className="text-white/80 hover:text-white transition-colors duration-300 text-left"
+                    className="text-white/80 hover:text-white transition-colors duration-300 text-left group flex items-center gap-2"
                     data-testid={`link-${link.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    whileHover={{ x: 5 }}
                   >
+                    <motion.div
+                      className="w-1.5 h-1.5 bg-white/40 rounded-full group-hover:bg-white transition-colors duration-300"
+                      whileHover={{ scale: 1.5 }}
+                    />
                     {link.name}
-                  </button>
-                </li>
+                  </motion.button>
+                </motion.li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Company Links */}
-          <div>
-            <h3 className="font-semibold text-lg mb-6">Company</h3>
-            <ul className="space-y-3">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <h3 className="font-bold fluid-text-lg mb-6 text-white">Company</h3>
+            <ul className="space-y-4">
               {footerLinks.company.map((link, index) => (
-                <li key={index}>
-                  <button
+                <motion.li 
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4, delay: 0.8 + index * 0.1 }}
+                >
+                  <motion.button
                     onClick={() => scrollToSection(link.href)}
-                    className="text-white/80 hover:text-white transition-colors duration-300 text-left"
+                    className="text-white/80 hover:text-white transition-colors duration-300 text-left group flex items-center gap-2"
                     data-testid={`link-${link.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    whileHover={{ x: 5 }}
                   >
+                    <motion.div
+                      className="w-1.5 h-1.5 bg-white/40 rounded-full group-hover:bg-white transition-colors duration-300"
+                      whileHover={{ scale: 1.5 }}
+                    />
                     {link.name}
-                  </button>
-                </li>
+                  </motion.button>
+                </motion.li>
               ))}
             </ul>
-          </div>
+          </motion.div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-white/20 mt-12 pt-8">
+        <motion.div 
+          className="border-t border-white/20 mt-16 pt-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.6, delay: 1 }}
+        >
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-white/60 text-sm">
+            <motion.p 
+              className="text-white/60 fluid-text-sm"
+              initial={{ opacity: 0 }}
+              animate={inView ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ duration: 0.6, delay: 1.2 }}
+            >
               © {currentYear} Career Plans. All rights reserved.
-            </p>
-            <div className="flex gap-6 text-sm">
-              <button className="text-white/60 hover:text-white transition-colors duration-300">
-                Privacy Policy
-              </button>
-              <button className="text-white/60 hover:text-white transition-colors duration-300">
-                Terms of Service
-              </button>
+            </motion.p>
+            <div className="flex gap-6 fluid-text-sm">
+              {['Privacy Policy', 'Terms of Service'].map((item, index) => (
+                <motion.button 
+                  key={item}
+                  className="text-white/60 hover:text-white transition-colors duration-300"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+                  transition={{ duration: 0.4, delay: 1.4 + index * 0.1 }}
+                  whileHover={{ y: -2 }}
+                >
+                  {item}
+                </motion.button>
+              ))}
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
-    </footer>
+    </motion.footer>
   );
 }
