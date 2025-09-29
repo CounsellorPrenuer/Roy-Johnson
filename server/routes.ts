@@ -107,6 +107,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get admin dashboard statistics
+  app.get("/api/admin/stats", requireAdminAuth, async (req, res) => {
+    try {
+      const stats = await storage.getDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  });
+
   // Coaching Packages API
   app.get("/api/packages", async (req, res) => {
     try {
@@ -284,6 +295,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       console.error("Error updating payment status:", error);
+      res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  });
+
+  // Get all payments (admin only)
+  app.get("/api/admin/payments", requireAdminAuth, async (req, res) => {
+    try {
+      const payments = await storage.getAllPayments();
+      res.json(payments);
+    } catch (error) {
+      console.error("Error fetching all payments:", error);
       res.status(500).json({ success: false, error: "Internal server error" });
     }
   });

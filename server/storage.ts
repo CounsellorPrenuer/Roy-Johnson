@@ -50,6 +50,17 @@ export interface IStorage {
   getPaymentByOrderId(orderId: string): Promise<Payment | undefined>;
   updatePaymentStatus(id: string, status: string, paymentId?: string): Promise<void>;
   getUserPayments(userId: string): Promise<Payment[]>;
+  getAllPayments(): Promise<Payment[]>;
+  
+  // Dashboard Stats
+  getDashboardStats(): Promise<{
+    totalRevenue: number;
+    pendingPayments: number;
+    completedPayments: number;
+    totalPayments: number;
+    newContactRequests: number;
+    totalContactRequests: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -220,6 +231,47 @@ export class DatabaseStorage implements IStorage {
       .from(payments)
       .where(eq(payments.userId, userId))
       .orderBy(desc(payments.createdAt));
+  }
+
+  async getAllPayments(): Promise<Payment[]> {
+    return await db
+      .select()
+      .from(payments)
+      .orderBy(desc(payments.createdAt));
+  }
+
+  async getDashboardStats(): Promise<{
+    totalRevenue: number;
+    pendingPayments: number;
+    completedPayments: number;
+    totalPayments: number;
+    newContactRequests: number;
+    totalContactRequests: number;
+  }> {
+    // Get all payments
+    const allPayments = await db.select().from(payments);
+    
+    // Calculate payment stats
+    const totalPayments = allPayments.length;
+    const completedPayments = allPayments.filter(p => p.status === 'completed').length;
+    const pendingPayments = allPayments.filter(p => p.status === 'pending').length;
+    const totalRevenue = allPayments
+      .filter(p => p.status === 'completed')
+      .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+    
+    // Get all contact inquiries
+    const allContacts = await db.select().from(contactInquiries);
+    const totalContactRequests = allContacts.length;
+    const newContactRequests = allContacts.filter(c => !c.isRead).length;
+    
+    return {
+      totalRevenue,
+      pendingPayments,
+      completedPayments,
+      totalPayments,
+      newContactRequests,
+      totalContactRequests
+    };
   }
 }
 

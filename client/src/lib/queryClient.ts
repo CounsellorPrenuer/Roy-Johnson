@@ -8,13 +8,27 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest(
-  method: string,
   url: string,
+  method: string = "GET",
   data?: unknown | undefined,
 ): Promise<Response> {
+  const headers: Record<string, string> = {};
+  
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+  
+  // Add admin auth token for admin routes
+  if (url.includes('/api/admin/')) {
+    const adminToken = localStorage.getItem('admin_token');
+    if (adminToken) {
+      headers["Authorization"] = `Bearer ${adminToken}`;
+    }
+  }
+
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -29,7 +43,19 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const url = queryKey.join("/") as string;
+    const headers: Record<string, string> = {};
+    
+    // Add admin auth token for admin routes
+    if (url.includes('/api/admin/')) {
+      const adminToken = localStorage.getItem('admin_token');
+      if (adminToken) {
+        headers["Authorization"] = `Bearer ${adminToken}`;
+      }
+    }
+
+    const res = await fetch(url, {
+      headers,
       credentials: "include",
     });
 
