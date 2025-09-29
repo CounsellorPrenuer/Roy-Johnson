@@ -3,8 +3,10 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertContactInquirySchema, insertUserSchema, insertBookingSchema, insertPaymentSchema, createOrderSchema, verifyPaymentSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
+import { z } from "zod";
 import Razorpay from "razorpay";
 import crypto from "crypto";
+import type { Request, Response, NextFunction } from "express";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize Razorpay
@@ -12,6 +14,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     key_id: process.env.RAZORPAY_KEY_ID!,
     key_secret: process.env.RAZORPAY_KEY_SECRET!,
   });
+
+  // Validate required environment variables
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    throw new Error('RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET environment variables are required');
+  }
+  
+  // ADMIN_TOKEN with secure default for development
+  const adminToken = process.env.ADMIN_TOKEN || 'secure_admin_token_dev_2024';
+  if (process.env.NODE_ENV === 'production' && !process.env.ADMIN_TOKEN) {
+    throw new Error('ADMIN_TOKEN environment variable is required in production');
+  }
+  
+  if (adminToken === 'secure_admin_token_dev_2024') {
+    console.warn('⚠️  WARNING: Using default admin token for development. Set ADMIN_TOKEN environment variable in production!');
+  }
+
+  // Admin authentication middleware
+  const requireAdminAuth = (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log(`Admin auth failed: Missing or invalid auth header from ${req.ip}`);
+      return res.status(401).json({ 
+        success: false, 
+        error: "Authentication required. Please provide admin token." 
+      });
+    }
+    
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const expectedToken = adminToken;
+    
+    // Use timing-safe comparison
+    const tokenBuffer = Buffer.from(token, 'utf8');
+    const expectedBuffer = Buffer.from(expectedToken, 'utf8');
+    
+    if (tokenBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(tokenBuffer, expectedBuffer)) {
+      console.log(`Admin auth failed: Invalid token from ${req.ip}`);
+      return res.status(403).json({ 
+        success: false, 
+        error: "Invalid admin token. Access denied." 
+      });
+    }
+    
+    console.log(`Admin authenticated: ${req.method} ${req.path} from ${req.ip}`);
+    next();
+  };
   // Contact Form API
   app.post("/api/contact", async (req, res) => {
     try {
@@ -33,7 +81,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all contact inquiries (admin)
-  app.get("/api/admin/contacts", async (req, res) => {
+  app.get("/api/admin/contacts", requireAdminAuth, async (req, res) => {
     try {
       const inquiries = await storage.getAllContactInquiries();
       res.json(inquiries);
@@ -44,7 +92,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Mark contact inquiry as read (admin)
-  app.patch("/api/admin/contacts/:id/read", async (req, res) => {
+  app.patch("/api/admin/contacts/:id/read", requireAdminAuth, async (req, res) => {
     try {
       await storage.markContactInquiryAsRead(req.params.id);
       res.json({ success: true });
@@ -89,10 +137,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin route to create packages
-  app.post("/api/admin/packages", async (req, res) => {
+  app.post("/api/admin/packages", requireAdminAuth, async (req, res) => {
     try {
-      const packageData = req.body;
-      const pkg = await storage.createPackage(packageData);
+      // Validate package data with Zod schema
+      const packageSchema = z.object({
+        name: z.string().min(1, "Package name is required"),
+        category: z.enum(["freshers", "middle-management", "senior-professionals"]),
+        packageType: z.enum(["ascend", "ascend_plus"]),
+        price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid price format"),
+        features: z.array(z.string()).min(1, "At least one feature is required")
+      });
+      
+      const validatedData = packageSchema.parse(req.body);
+      const pkg = await storage.createPackage({
+        ...validatedData,
+        isActive: true // Default new packages to active
+      });
       res.json({ success: true, package: pkg });
     } catch (error) {
       console.error("Error creating package:", error);
@@ -159,7 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/bookings", async (req, res) => {
+  app.get("/api/admin/bookings", requireAdminAuth, async (req, res) => {
     try {
       const bookings = await storage.getAllBookings();
       res.json(bookings);
@@ -169,23 +229,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/bookings/:id/status", async (req, res) => {
+  app.patch("/api/bookings/:id/status", requireAdminAuth, async (req, res) => {
     try {
-      const { status } = req.body;
+      const statusSchema = z.object({
+        status: z.enum(["pending", "confirmed", "completed", "cancelled"])
+      });
+      const { status } = statusSchema.parse(req.body);
+      
       await storage.updateBookingStatus(req.params.id, status);
+      console.log(`Admin updated booking ${req.params.id} status to ${status}`);
       res.json({ success: true });
-    } catch (error) {
-      console.error("Error updating booking status:", error);
-      res.status(500).json({ success: false, error: "Internal server error" });
-    }
-  });
-
-  // Payment System API
-  app.post("/api/payments", async (req, res) => {
-    try {
-      const paymentData = insertPaymentSchema.parse(req.body);
-      const payment = await storage.createPayment(paymentData);
-      res.json({ success: true, payment });
     } catch (error: any) {
       if (error.name === "ZodError") {
         const validationError = fromZodError(error);
@@ -195,23 +248,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
           details: validationError.message 
         });
       }
-      console.error("Payment creation error:", error);
+      console.error("Error updating booking status:", error);
       res.status(500).json({ success: false, error: "Internal server error" });
     }
   });
 
-  app.patch("/api/payments/:id/status", async (req, res) => {
+  // Payment System API - REMOVED: Direct payment creation is unsafe
+  // Payments should only be created through the verified Razorpay flow via /api/payments/create-order
+
+  // Update payment status (admin only - for manual reconciliation)
+  app.patch("/api/payments/:id/status", requireAdminAuth, async (req, res) => {
     try {
-      const { status, paymentId } = req.body;
+      const statusSchema = z.object({
+        status: z.enum(["pending", "completed", "failed", "refunded"]),
+        paymentId: z.string().optional(),
+        reason: z.string().min(1, "Reason for manual status change is required")
+      });
+      const { status, paymentId, reason } = statusSchema.parse(req.body);
+      
       await storage.updatePaymentStatus(req.params.id, status, paymentId);
+      console.log(`Admin manually updated payment ${req.params.id} status to ${status}, reason: ${reason}`);
       res.json({ success: true });
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ 
+          success: false, 
+          error: "Validation failed", 
+          details: validationError.message 
+        });
+      }
       console.error("Error updating payment status:", error);
       res.status(500).json({ success: false, error: "Internal server error" });
     }
   });
 
-  app.get("/api/payments/user/:userId", async (req, res) => {
+  // Get user payments (admin only)
+  app.get("/api/payments/user/:userId", requireAdminAuth, async (req, res) => {
     try {
       const payments = await storage.getUserPayments(req.params.userId);
       res.json(payments);
