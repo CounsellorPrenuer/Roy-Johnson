@@ -40,7 +40,7 @@ export default function DiscoveryCallModal({ isOpen, onClose }: DiscoveryCallMod
 
   const discoveryCallMutation = useMutation({
     mutationFn: async (data: DiscoveryCallForm) => {
-      return apiRequest('POST', '/api/contact', {
+      return apiRequest('/api/contact', 'POST', {
         name: data.fullName,
         email: '', // Not required for discovery call
         phone: data.phoneNumber,
