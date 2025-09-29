@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 // TODO: Fix image import path after build setup
-const logoPath = "/attached_assets/logo_1759131412190.png";
+const logoPath = "/attached_assets/logo_1759140700614.png";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
