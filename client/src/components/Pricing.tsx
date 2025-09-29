@@ -281,6 +281,8 @@ export default function Pricing() {
     }
   };
 
+  const currentData = packageData[activeCategory];
+
   return (
     <section id="pricing" className="py-16 md:py-24 relative overflow-hidden">
       {/* Animated background */}
@@ -402,16 +404,16 @@ export default function Pricing() {
           >
             <h3 className="fluid-text-3xl font-bold mb-4">
               <span className="bg-gradient-to-r from-brand-teal via-brand-aqua to-brand-teal bg-clip-text text-transparent">
-                {packageData[activeCategory].heading}
+                {currentData.heading}
               </span>
             </h3>
             <p className="fluid-text-lg text-muted-foreground">
-              {packageData[activeCategory].subheading}
+              {currentData.subheading}
             </p>
           </motion.div>
 
           {/* Package Content */}
-          {packageData[activeCategory].comingSoon ? (
+          {'comingSoon' in currentData ? (
             <motion.div
               className="text-center py-16"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -438,7 +440,7 @@ export default function Pricing() {
             </motion.div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto justify-items-center">
-              {packageData[activeCategory].packages?.map((pkg: any, index: number) => (
+              {'packages' in currentData && currentData.packages?.map((pkg: any, index: number) => (
                 <PricingCard
                   key={`${activeCategory}-${index}`}
                   title={pkg.title}

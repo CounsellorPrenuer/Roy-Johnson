@@ -339,6 +339,122 @@ export default function Contact() {
             </div>
           </motion.div>
         </div>
+
+        {/* Mentoria Partnership Section */}
+        <motion.div
+          className="mt-20 text-center"
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 0.8, delay: 1.2 }}
+        >
+          <motion.h3 
+            className="fluid-text-4xl font-bold mb-6"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.8, delay: 1.4 }}
+          >
+            <span className="bg-gradient-to-r from-brand-teal via-brand-aqua to-brand-teal bg-clip-text text-transparent">
+              Powered by Mentoria's Career Discovery Platform
+            </span>
+          </motion.h3>
+          
+          <motion.p 
+            className="fluid-text-lg text-muted-foreground max-w-4xl mx-auto leading-relaxed mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.8, delay: 1.6 }}
+          >
+            Every Leadcrest Consulting plan includes lifetime access to Mentoria: India's most trusted platform for career discovery, mentorship, and lifelong upskilling.
+          </motion.p>
+
+          {/* Stats Section */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+            {[
+              { number: '3,50,000+', label: 'Students and Professionals\nMentored' },
+              { number: '240+', label: 'Corporate Partners' },
+              { number: '350+', label: 'Schools and College\nPartners' },
+              { number: '1000+', label: 'Hours of Career Webinars' }
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+                transition={{ duration: 0.5, delay: 1.8 + index * 0.1 }}
+                whileHover={{ scale: 1.05 }}
+                className="text-center"
+              >
+                <Card className="glass-card border-brand-aqua/20 hover:border-brand-aqua/40 transition-all duration-300 hover:shadow-lg p-6">
+                  <motion.div
+                    className="fluid-text-3xl font-bold text-brand-teal mb-2"
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      color: ['#003752', '#408FA4', '#003752']
+                    }}
+                    transition={{ 
+                      duration: 2, 
+                      repeat: Infinity, 
+                      ease: "easeInOut",
+                      delay: index * 0.5
+                    }}
+                  >
+                    {stat.number}
+                  </motion.div>
+                  <div className="fluid-text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
+                    {stat.label}
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Mentoria Link Box */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.8, delay: 2.2 }}
+            whileHover={{ scale: 1.02 }}
+            className="max-w-md mx-auto mb-8"
+          >
+            <Card className="bg-gradient-to-br from-brand-teal to-brand-aqua text-white relative overflow-hidden cursor-pointer"
+                  data-testid="link-mentoria-platform">
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                animate={{ x: ['-100%', '100%'] }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              <CardContent className="p-8 text-center relative z-10">
+                <motion.div
+                  animate={{ 
+                    rotate: [0, 5, -5, 0],
+                    scale: [1, 1.05, 1]
+                  }}
+                  transition={{ 
+                    duration: 2, 
+                    repeat: Infinity, 
+                    ease: "easeInOut"
+                  }}
+                >
+                  <div className="fluid-text-2xl font-bold mb-2">MENTOR'A</div>
+                  <div className="fluid-text-lg font-semibold mb-2">MIND AT PEACE</div>
+                  <div className="fluid-text-base opacity-90">Career Discovery Platform</div>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.p 
+            className="fluid-text-base text-muted-foreground"
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: 0.8, delay: 2.4 }}
+          >
+            Click to explore Mentoria's comprehensive career platform
+          </motion.p>
+        </motion.div>
       </div>
     </section>
   );
