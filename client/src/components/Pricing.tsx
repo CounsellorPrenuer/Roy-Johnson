@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Star, Sparkles, Bell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { loadRazorpayScript, initializePayment } from '@/lib/razorpay';
+import { loadRazorpayScript } from '@/lib/razorpay';
+import PaymentContactModal from './PaymentContactModal';
 import type { CoachingPackage } from '@shared/schema';
 
 interface PricingCardProps {
@@ -193,6 +194,7 @@ export default function Pricing() {
   const { toast } = useToast();
 
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<{id: string, name: string, price: string} | null>(null);
 
   // Load Razorpay script on component mount
   useEffect(() => {
@@ -254,44 +256,23 @@ export default function Pricing() {
       return;
     }
 
-    try {
-      // For demo purposes, using a dummy user ID
-      // In production, this would come from authentication context
-      const dummyUserId = 'demo-user-' + Date.now();
-      const userDetails = {
-        name: 'Demo User',
-        email: 'demo@example.com',
-        phone: '+91 9876543210'
-      };
-
-      await initializePayment(
-        packageId,
-        dummyUserId,
-        userDetails,
-        (paymentResult) => {
-          toast({
-            title: "Payment Successful!",
-            description: `Your payment has been processed successfully. Booking ID: ${paymentResult.bookingId}`,
-          });
-          console.log('Payment successful:', paymentResult);
-        },
-        (error) => {
-          toast({
-            title: "Payment Failed",
-            description: "There was an error processing your payment. Please try again.",
-            variant: "destructive",
-          });
-          console.error('Payment failed:', error);
-        }
-      );
-    } catch (error) {
-      console.error('Error initiating payment:', error);
+    // Find the selected package
+    const pkg = packages.find(p => p.id === packageId);
+    if (!pkg) {
       toast({
-        title: "Payment Error",
-        description: "Failed to initiate payment. Please try again.",
+        title: "Package Not Found",
+        description: "The selected package could not be found. Please try again.",
         variant: "destructive",
       });
+      return;
     }
+
+    // Open contact modal instead of direct payment
+    setSelectedPackage({
+      id: pkg.id,
+      name: pkg.name,
+      price: `₹${pkg.price}`
+    });
   };
 
   // Transform API packages to match component structure
@@ -551,6 +532,17 @@ export default function Pricing() {
           </motion.p>
         </motion.div>
       </div>
+      
+      {/* Payment Contact Modal */}
+      {selectedPackage && (
+        <PaymentContactModal
+          isOpen={!!selectedPackage}
+          onClose={() => setSelectedPackage(null)}
+          packageId={selectedPackage.id}
+          packageName={selectedPackage.name}
+          packagePrice={selectedPackage.price}
+        />
+      )}
     </section>
   );
 }
