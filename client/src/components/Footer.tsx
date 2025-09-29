@@ -3,7 +3,7 @@ import { useInView } from 'react-intersection-observer';
 import { Linkedin, Instagram, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 // TODO: Fix image import path after build setup
-const logoPath = "/attached_assets/logo_1759140700614.png";
+const logoPath = "/attached_assets/logo_1759141877823.png";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
