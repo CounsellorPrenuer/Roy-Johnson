@@ -21,10 +21,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Search, MessageSquare, Mail, Calendar, Eye, Check } from 'lucide-react';
+import { Search, MessageSquare, Mail, Calendar, Eye, Check, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { convertToCSV, downloadCSV, formatDateForCSV } from '@/lib/csvExport';
 
 interface ContactInquiry {
   id: string;
@@ -138,11 +139,42 @@ function MessagePreviewDialog({ contact }: { contact: ContactInquiry }) {
 export default function ContactManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const { toast } = useToast();
 
   const { data: contacts = [], isLoading, error } = useQuery<ContactInquiry[]>({
     queryKey: ['/api/admin/contacts'],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
+
+  // CSV Export function
+  const handleExportCSV = () => {
+    if (filteredContacts.length === 0) {
+      toast({
+        title: "No Data to Export",
+        description: "There are no contacts matching your current filters to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const exportData = filteredContacts.map(contact => ({
+      'Contact ID': contact.id,
+      'Name': contact.name,
+      'Email': contact.email,
+      'Message': contact.message,
+      'Status': contact.isRead ? 'Read' : 'Unread',
+      'Date Submitted': formatDateForCSV(contact.createdAt)
+    }));
+
+    const csv = convertToCSV(exportData);
+    const filename = `contacts_export_${new Date().toISOString().split('T')[0]}.csv`;
+    downloadCSV(csv, filename);
+    
+    toast({
+      title: "Export Successful",
+      description: `Exported ${filteredContacts.length} contacts to ${filename}`,
+    });
+  };
 
   // Filter contacts based on search and status
   const filteredContacts = contacts.filter(contact => {
@@ -236,6 +268,15 @@ export default function ContactManagement() {
                 <option value="read">Read Messages</option>
               </select>
             </div>
+            <Button 
+              onClick={handleExportCSV}
+              variant="outline"
+              className="sm:w-auto"
+              data-testid="button-export-contacts"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
           </div>
         </CardContent>
       </Card>

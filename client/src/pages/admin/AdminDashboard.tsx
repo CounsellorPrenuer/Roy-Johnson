@@ -1,14 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   TrendingUp, 
   Clock, 
   CheckCircle, 
   CreditCard, 
   MessageSquare, 
-  Users 
+  Users,
+  Download 
 } from 'lucide-react';
+import { convertToCSV, downloadCSV, formatDateForCSV, formatCurrencyForCSV } from '@/lib/csvExport';
+import { useToast } from '@/hooks/use-toast';
 
 interface DashboardStats {
   totalRevenue: number;
@@ -78,10 +82,136 @@ function StatCard({
 }
 
 export default function AdminDashboard() {
+  const { toast } = useToast();
   const { data: stats, isLoading, error } = useQuery<DashboardStats>({
     queryKey: ['/api/admin/stats'],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
+
+  // Import types (define interfaces at the top of the file)
+  interface Payment {
+    id: string;
+    customerName: string;
+    customerEmail: string;
+    amount: string;
+    status: 'pending' | 'completed' | 'failed' | 'refunded';
+    packageName?: string;
+    razorpayOrderId?: string;
+    razorpayPaymentId?: string;
+    createdAt: string;
+    updatedAt: string;
+  }
+
+  interface ContactInquiry {
+    id: string;
+    name: string;
+    email: string;
+    message: string;
+    isRead: boolean;
+    createdAt: string;
+  }
+
+  // Fetch all data for comprehensive export
+  const { data: payments = [] } = useQuery<Payment[]>({
+    queryKey: ['/api/admin/payments'],
+  });
+
+  const { data: contacts = [] } = useQuery<ContactInquiry[]>({
+    queryKey: ['/api/admin/contacts'],
+  });
+
+  // Export functions
+  const handleExportAllPayments = () => {
+    if (payments.length === 0) {
+      toast({
+        title: "No Data to Export",
+        description: "There are no payments available to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const exportData = payments.map((payment) => ({
+      'Payment ID': payment.id,
+      'Customer Name': payment.customerName || '',
+      'Customer Email': payment.customerEmail || '',
+      'Amount': formatCurrencyForCSV(payment.amount),
+      'Status': payment.status,
+      'Package': payment.packageName || '',
+      'Razorpay Order ID': payment.razorpayOrderId || '',
+      'Razorpay Payment ID': payment.razorpayPaymentId || '',
+      'Created Date': formatDateForCSV(payment.createdAt),
+      'Updated Date': formatDateForCSV(payment.updatedAt)
+    }));
+
+    const csv = convertToCSV(exportData);
+    const filename = `all_payments_${new Date().toISOString().split('T')[0]}.csv`;
+    downloadCSV(csv, filename);
+    
+    toast({
+      title: "Export Successful",
+      description: `Exported ${payments.length} payments to ${filename}`,
+    });
+  };
+
+  const handleExportAllContacts = () => {
+    if (contacts.length === 0) {
+      toast({
+        title: "No Data to Export",
+        description: "There are no contacts available to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const exportData = contacts.map((contact) => ({
+      'Contact ID': contact.id,
+      'Name': contact.name,
+      'Email': contact.email,
+      'Message': contact.message,
+      'Status': contact.isRead ? 'Read' : 'Unread',
+      'Date Submitted': formatDateForCSV(contact.createdAt)
+    }));
+
+    const csv = convertToCSV(exportData);
+    const filename = `all_contacts_${new Date().toISOString().split('T')[0]}.csv`;
+    downloadCSV(csv, filename);
+    
+    toast({
+      title: "Export Successful",
+      description: `Exported ${contacts.length} contacts to ${filename}`,
+    });
+  };
+
+  const handleExportDashboardStats = () => {
+    if (!stats) {
+      toast({
+        title: "No Data to Export",
+        description: "Dashboard statistics are not available.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const exportData = [{
+      'Report Date': new Date().toISOString().split('T')[0],
+      'Total Revenue': formatCurrencyForCSV(stats.totalRevenue),
+      'Total Payments': stats.totalPayments,
+      'Completed Payments': stats.completedPayments,
+      'Pending Payments': stats.pendingPayments,
+      'Total Contact Requests': stats.totalContactRequests,
+      'New Contact Requests': stats.newContactRequests
+    }];
+
+    const csv = convertToCSV(exportData);
+    const filename = `dashboard_stats_${new Date().toISOString().split('T')[0]}.csv`;
+    downloadCSV(csv, filename);
+    
+    toast({
+      title: "Export Successful",
+      description: `Dashboard statistics exported to ${filename}`,
+    });
+  };
 
   if (isLoading) {
     return (
@@ -193,6 +323,50 @@ export default function AdminDashboard() {
           variant="default"
         />
       </div>
+
+      {/* Data Export */}
+      <Card className="hover-elevate">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Download className="h-5 w-5" />
+            Data Export
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Export your business data in CSV format for analysis and reporting
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-3">
+            <Button 
+              onClick={handleExportDashboardStats}
+              variant="outline"
+              className="w-full"
+              data-testid="button-export-dashboard-stats"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Dashboard Stats
+            </Button>
+            <Button 
+              onClick={handleExportAllPayments}
+              variant="outline"
+              className="w-full"
+              data-testid="button-export-all-payments"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              All Payments
+            </Button>
+            <Button 
+              onClick={handleExportAllContacts}
+              variant="outline"
+              className="w-full"
+              data-testid="button-export-all-contacts"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              All Contacts
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-2">

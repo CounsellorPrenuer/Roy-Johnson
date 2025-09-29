@@ -12,8 +12,10 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Search, CreditCard, Calendar, DollarSign, Filter } from 'lucide-react';
+import { Search, CreditCard, Calendar, DollarSign, Filter, Download } from 'lucide-react';
 import { format } from 'date-fns';
+import { convertToCSV, downloadCSV, formatDateForCSV, formatCurrencyForCSV } from '@/lib/csvExport';
+import { useToast } from '@/hooks/use-toast';
 
 interface Payment {
   id: string;
@@ -69,18 +71,53 @@ function PaymentStatusBadge({ status }: { status: Payment['status'] }) {
 export default function PaymentManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const { toast } = useToast();
 
   const { data: payments = [], isLoading, error } = useQuery<Payment[]>({
     queryKey: ['/api/admin/payments'],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
+  // CSV Export function
+  const handleExportCSV = () => {
+    if (filteredPayments.length === 0) {
+      toast({
+        title: "No Data to Export",
+        description: "There are no payments matching your current filters to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const exportData = filteredPayments.map(payment => ({
+      'Payment ID': payment.id,
+      'Customer Name': payment.customerName || '',
+      'Customer Email': payment.customerEmail || '',
+      'Amount': formatCurrencyForCSV(payment.amount),
+      'Status': payment.status,
+      'Package': payment.packageName || '',
+      'Razorpay Order ID': payment.razorpayOrderId || '',
+      'Razorpay Payment ID': payment.razorpayPaymentId || '',
+      'Created Date': formatDateForCSV(payment.createdAt),
+      'Updated Date': formatDateForCSV(payment.updatedAt)
+    }));
+
+    const csv = convertToCSV(exportData);
+    const filename = `payments_export_${new Date().toISOString().split('T')[0]}.csv`;
+    downloadCSV(csv, filename);
+    
+    toast({
+      title: "Export Successful",
+      description: `Exported ${filteredPayments.length} payments to ${filename}`,
+    });
+  };
+
   // Filter payments based on search and status
   const filteredPayments = payments.filter(payment => {
     const matchesSearch = 
-      payment.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.id.toLowerCase().includes(searchTerm.toLowerCase());
+      (payment.customerName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (payment.customerEmail?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (payment.id?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
     
@@ -181,6 +218,15 @@ export default function PaymentManagement() {
                 <option value="refunded">Refunded</option>
               </select>
             </div>
+            <Button 
+              onClick={handleExportCSV}
+              variant="outline"
+              className="sm:w-auto"
+              data-testid="button-export-payments"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
           </div>
         </CardContent>
       </Card>
