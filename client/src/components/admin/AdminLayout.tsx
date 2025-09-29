@@ -47,12 +47,20 @@ function AdminSidebar() {
   const { logout } = useAdminAuth();
   const { toast } = useToast();
 
-  const handleLogout = () => {
-    logout();
-    toast({
-      title: "Logged Out",
-      description: "You have been logged out successfully",
-    });
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Logged Out",
+        description: "You have been logged out successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Logout Error",
+        description: "There was an issue logging out, but you've been logged out locally",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

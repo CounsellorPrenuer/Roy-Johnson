@@ -25,15 +25,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     throw new Error('RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET environment variables are required');
   }
   
-  // ADMIN_TOKEN with secure default for development
-  const adminToken = process.env.ADMIN_TOKEN || 'secure_admin_token_dev_2024';
-  if (process.env.NODE_ENV === 'production' && !process.env.ADMIN_TOKEN) {
-    throw new Error('ADMIN_TOKEN environment variable is required in production');
+  // Admin credentials with secure defaults for development
+  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
+  
+  if (process.env.NODE_ENV === 'production' && (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD)) {
+    throw new Error('ADMIN_USERNAME and ADMIN_PASSWORD environment variables are required in production');
   }
   
-  if (adminToken === 'secure_admin_token_dev_2024') {
-    console.warn('⚠️  WARNING: Using default admin token for development. Set ADMIN_TOKEN environment variable in production!');
+  if (adminUsername === 'admin' && adminPassword === 'admin') {
+    console.warn('⚠️  WARNING: Using default admin credentials for development. Set ADMIN_USERNAME and ADMIN_PASSWORD environment variables in production!');
   }
+
+  // Simple in-memory session store for admin auth
+  const adminSessions = new Set<string>();
+  
+  // Generate session token
+  const generateSessionToken = () => {
+    return crypto.randomBytes(32).toString('hex');
+  };
 
   // Admin authentication middleware
   const requireAdminAuth = (req: Request, res: Response, next: NextFunction) => {
@@ -43,28 +53,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Admin auth failed: Missing or invalid auth header from ${req.ip}`);
       return res.status(401).json({ 
         success: false, 
-        error: "Authentication required. Please provide admin token." 
+        error: "Authentication required. Please log in." 
       });
     }
     
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    const expectedToken = adminToken;
     
-    // Use timing-safe comparison
-    const tokenBuffer = Buffer.from(token, 'utf8');
-    const expectedBuffer = Buffer.from(expectedToken, 'utf8');
-    
-    if (tokenBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(tokenBuffer, expectedBuffer)) {
-      console.log(`Admin auth failed: Invalid token from ${req.ip}`);
+    if (!adminSessions.has(token)) {
+      console.log(`Admin auth failed: Invalid session token from ${req.ip}`);
       return res.status(403).json({ 
         success: false, 
-        error: "Invalid admin token. Access denied." 
+        error: "Invalid session. Please log in again." 
       });
     }
     
     console.log(`Admin authenticated: ${req.method} ${req.path} from ${req.ip}`);
     next();
   };
+
+  // Admin login endpoint
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Username and password are required" 
+        });
+      }
+      
+      // Check credentials
+      if (username === adminUsername && password === adminPassword) {
+        const sessionToken = generateSessionToken();
+        adminSessions.add(sessionToken);
+        
+        console.log(`Admin login successful from ${req.ip}`);
+        res.json({ 
+          success: true, 
+          token: sessionToken,
+          message: "Login successful" 
+        });
+      } else {
+        console.log(`Admin login failed: Invalid credentials from ${req.ip}`);
+        res.status(401).json({ 
+          success: false, 
+          error: "Invalid username or password" 
+        });
+      }
+    } catch (error) {
+      console.error("Admin login error:", error);
+      res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  });
+
+  // Admin logout endpoint
+  app.post("/api/admin/logout", requireAdminAuth, async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      const token = authHeader?.substring(7); // Remove 'Bearer ' prefix
+      
+      if (token) {
+        adminSessions.delete(token);
+      }
+      
+      console.log(`Admin logout from ${req.ip}`);
+      res.json({ success: true, message: "Logged out successfully" });
+    } catch (error) {
+      console.error("Admin logout error:", error);
+      res.status(500).json({ success: false, error: "Internal server error" });
+    }
+  });
+
   // Contact Form API
   app.post("/api/contact", async (req, res) => {
     try {

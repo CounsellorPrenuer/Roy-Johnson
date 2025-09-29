@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 interface AdminAuthContextType {
   isAuthenticated: boolean;
   login: (token: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   token: string | null;
 }
 
@@ -28,10 +28,27 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     setIsAuthenticated(true);
   };
 
-  const logout = () => {
-    localStorage.removeItem('admin_token');
-    setToken(null);
-    setIsAuthenticated(false);
+  const logout = async () => {
+    try {
+      // Call backend logout endpoint if token exists
+      if (token) {
+        await fetch('/api/admin/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Continue with local logout even if backend fails
+    } finally {
+      // Always clear local session
+      localStorage.removeItem('admin_token');
+      setToken(null);
+      setIsAuthenticated(false);
+    }
   };
 
   return (
