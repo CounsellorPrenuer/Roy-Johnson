@@ -3,8 +3,14 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertContactInquirySchema, insertUserSchema, insertBookingSchema, insertPaymentSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
+import Razorpay from "razorpay";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize Razorpay
+  const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID!,
+    key_secret: process.env.RAZORPAY_KEY_SECRET!,
+  });
   // Contact Form API
   app.post("/api/contact", async (req, res) => {
     try {
@@ -212,6 +218,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching user payments:", error);
       res.status(500).json({ success: false, error: "Internal server error" });
     }
+  });
+
+  // Razorpay Payment Routes
+  
+  // Create Razorpay order for package purchase
+  app.post("/api/payments/create-order", async (req, res) => {
+    try {
+      const { packageId, userId } = req.body;
+      
+      if (!packageId || !userId) {
+        return res.status(400).json({ 
+          success: false, 
+          error: "Package ID and User ID are required" 
+        });
+      }
+
+      // Get package details
+      const pkg = await storage.getPackageById(packageId);
+      if (!pkg) {
+        return res.status(404).json({ success: false, error: "Package not found" });
+      }
+
+      // Create Razorpay order
+      const order = await razorpay.orders.create({
+        amount: Math.round(parseFloat(pkg.price) * 100), // Amount in paise
+        currency: "INR",
+        receipt: `receipt_${Date.now()}`,
+        notes: {
+          packageId: pkg.id,
+          packageName: pkg.name,
+          userId: userId,
+          category: pkg.category
+        }
+      });
+
+      // Create payment record in database
+      const payment = await storage.createPayment({
+        bookingId: "", // Will be updated after booking creation
+        userId: userId,
+        amount: pkg.price,
+        razorpayOrderId: order.id
+      });
+
+      res.json({
+        success: true,
+        orderId: order.id,
+        amount: order.amount,
+        currency: order.currency,
+        paymentId: payment.id,
+        packageDetails: {
+          id: pkg.id,
+          name: pkg.name,
+          price: pkg.price,
+          category: pkg.category
+        }
+      });
+    } catch (error) {
+      console.error("Error creating Razorpay order:", error);
+      res.status(500).json({ success: false, error: "Failed to create payment order" });
+    }
+  });
+
+  // Verify Razorpay payment
+  app.post("/api/payments/verify", async (req, res) => {
+    try {
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature, paymentId, packageId, userId } = req.body;
+      
+      // Verify payment signature
+      const crypto = require('crypto');
+      const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!);
+      shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+      const digest = shasum.digest('hex');
+      
+      if (digest !== razorpay_signature) {
+        return res.status(400).json({ success: false, error: "Invalid payment signature" });
+      }
+
+      // Get package details for booking
+      const pkg = await storage.getPackageById(packageId);
+      if (!pkg) {
+        return res.status(404).json({ success: false, error: "Package not found" });
+      }
+
+      // Create booking record
+      const booking = await storage.createBooking({
+        userId: userId,
+        packageId: packageId,
+        totalAmount: pkg.price
+      });
+
+      // Update payment record with success status
+      await storage.updatePaymentStatus(paymentId, "completed", razorpay_payment_id);
+
+      // Update booking with payment ID
+      await storage.updateBookingPayment(booking.id, paymentId);
+
+      res.json({
+        success: true,
+        message: "Payment verified successfully",
+        bookingId: booking.id,
+        paymentDetails: {
+          razorpayPaymentId: razorpay_payment_id,
+          razorpayOrderId: razorpay_order_id,
+          amount: pkg.price,
+          status: "completed"
+        }
+      });
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+      res.status(500).json({ success: false, error: "Payment verification failed" });
+    }
+  });
+
+  // Get Razorpay key for frontend
+  app.get("/api/payments/razorpay-key", (req, res) => {
+    res.json({ key: process.env.RAZORPAY_KEY_ID });
   });
 
   // Health check endpoint

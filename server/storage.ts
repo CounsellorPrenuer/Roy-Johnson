@@ -42,6 +42,7 @@ export interface IStorage {
   getUserBookings(userId: string): Promise<Booking[]>;
   getAllBookings(): Promise<Booking[]>;
   updateBookingStatus(id: string, status: string): Promise<void>;
+  updateBookingPayment(bookingId: string, paymentId: string): Promise<void>;
   
   // Payments
   createPayment(payment: InsertPayment): Promise<Payment>;
@@ -166,6 +167,13 @@ export class DatabaseStorage implements IStorage {
       .update(bookings)
       .set({ status: status as any, updatedAt: new Date() })
       .where(eq(bookings.id, id));
+  }
+
+  async updateBookingPayment(bookingId: string, paymentId: string): Promise<void> {
+    await db
+      .update(bookings)
+      .set({ paymentId: paymentId, updatedAt: new Date() })
+      .where(eq(bookings.id, bookingId));
   }
 
   // Payments

@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Star, Sparkles, Bell } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { loadRazorpayScript, initializePayment } from '@/lib/razorpay';
+import type { CoachingPackage } from '@shared/schema';
 
 interface PricingCardProps {
   title: string;
@@ -15,9 +19,12 @@ interface PricingCardProps {
   isPopular?: boolean;
   buttonText: string;
   index: number;
+  packageId: string;
+  category: string;
+  onPurchase: (packageId: string) => void;
 }
 
-function PricingCard({ title, price, duration, description, features, isPopular, buttonText, index }: PricingCardProps) {
+function PricingCard({ title, price, duration, description, features, isPopular, buttonText, index, packageId, category, onPurchase }: PricingCardProps) {
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
@@ -152,7 +159,7 @@ function PricingCard({ title, price, duration, description, features, isPopular,
                   ? 'bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white shadow-lg'
                   : 'glass-card border-2 border-brand-aqua text-brand-teal hover:bg-brand-aqua/10'
               }`}
-              onClick={() => console.log(`${buttonText} clicked for ${title}`)}
+              onClick={() => onPurchase(packageId)}
               data-testid={`button-${title.toLowerCase().replace(/\s+/g, '-')}`}
             >
               <span className="relative z-10">{buttonText}</span>
@@ -183,6 +190,27 @@ export default function Pricing() {
   });
 
   const [activeCategory, setActiveCategory] = useState<'freshers' | 'middle-management' | 'senior-professionals'>('freshers');
+  const { toast } = useToast();
+
+  // Load Razorpay script on component mount
+  useEffect(() => {
+    loadRazorpayScript().then((loaded) => {
+      if (!loaded) {
+        console.error('Failed to load Razorpay script');
+        toast({
+          title: "Payment System Error",
+          description: "Failed to load payment system. Please refresh the page.",
+          variant: "destructive",
+        });
+      }
+    });
+  }, [toast]);
+
+  // Fetch packages from API
+  const { data: packages = [], isLoading } = useQuery<CoachingPackage[]>({
+    queryKey: ['/api/packages'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   const categories = [
     {
@@ -202,84 +230,88 @@ export default function Pricing() {
     }
   ];
 
-  const packageData = {
-    freshers: {
-      heading: 'Packages for Freshers',
-      subheading: 'Strategic career foundation & professional readiness',
-      packages: [
-        {
-          title: 'Ascend',
-          price: '₹6,499',
-          duration: 'package',
-          description: 'For College Graduates',
-          features: [
-            'Psychometric assessment to measure your interests, personality and abilities',
-            '1 career coaching session for specialisation/job selection',
-            'Lifetime access to Knowledge Gateway',
-            'Pre-recorded webinars by industry experts'
-          ],
-          buttonText: 'Choose Ascend'
+  // Handle package purchase
+  const handlePurchase = async (packageId: string) => {
+    try {
+      // For demo purposes, using a dummy user ID
+      // In production, this would come from authentication context
+      const dummyUserId = 'demo-user-' + Date.now();
+      const userDetails = {
+        name: 'Demo User',
+        email: 'demo@example.com',
+        phone: '+91 9876543210'
+      };
+
+      await initializePayment(
+        packageId,
+        dummyUserId,
+        userDetails,
+        (paymentResult) => {
+          toast({
+            title: "Payment Successful!",
+            description: `Your payment has been processed successfully. Booking ID: ${paymentResult.bookingId}`,
+          });
+          console.log('Payment successful:', paymentResult);
         },
-        {
-          title: 'Ascend Plus',
-          price: '₹10,599',
-          duration: 'package',
-          description: 'For College Graduates',
-          features: [
-            'Psychometric assessment to measure your interests, personality and abilities',
-            '3 career coaching sessions',
-            'Lifetime access to Knowledge Gateway',
-            'Guidance on Masters\' admissions in India and abroad',
-            'CV reviews during internships/graduation',
-            'Guidance until you get into the job you love',
-            'Career helpline access'
-          ],
-          isPopular: true,
-          buttonText: 'Choose Ascend Plus'
+        (error) => {
+          toast({
+            title: "Payment Failed",
+            description: "There was an error processing your payment. Please try again.",
+            variant: "destructive",
+          });
+          console.error('Payment failed:', error);
         }
-      ]
-    },
-    'middle-management': {
-      heading: 'Packages for Middle Management',
-      subheading: 'Leadership development & strategic advancement',
-      packages: [
-        {
-          title: 'Ascend',
-          price: '₹6,499',
-          duration: 'package',
-          description: 'For Working Professionals',
-          features: [
-            'Psychometric assessment to measure your interests, personality and abilities',
-            '1 career coaching session focused on career transition, growth and upskilling',
-            'Lifetime access to Knowledge Gateway',
-            'Pre-recorded webinars by industry experts'
-          ],
-          buttonText: 'Choose Ascend'
-        },
-        {
-          title: 'Ascend Plus',
-          price: '₹10,599',
-          duration: 'package',
-          description: 'For Working Professionals',
-          features: [
-            'Psychometric assessment to measure your interests, personality and abilities',
-            '3 career coaching sessions',
-            'Lifetime access to Knowledge Gateway',
-            'CV reviews and Interview Prep',
-            'Guidance until you get into the job you love',
-            'Career helpline access'
-          ],
-          isPopular: true,
-          buttonText: 'Choose Ascend Plus'
-        }
-      ]
-    },
-    'senior-professionals': {
-      heading: 'Packages for Senior Professionals',
-      subheading: 'Executive transformation & C-suite positioning',
-      comingSoon: true
+      );
+    } catch (error) {
+      console.error('Error initiating payment:', error);
+      toast({
+        title: "Payment Error",
+        description: "Failed to initiate payment. Please try again.",
+        variant: "destructive",
+      });
     }
   };
+
+  // Transform API packages to match component structure
+  const getPackageData = () => {
+    if (!packages || packages.length === 0) {
+      return {
+        heading: 'Loading packages...',
+        subheading: '',
+        packages: []
+      };
+    }
+
+    const categoryPackages = packages.filter(pkg => pkg.category === activeCategory);
+    
+    if (activeCategory === 'senior-professionals') {
+      return {
+        heading: 'Packages for Senior Professionals',
+        subheading: 'Executive transformation & C-suite positioning',
+        comingSoon: true
+      };
+    }
+
+    return {
+      heading: `Packages for ${activeCategory === 'freshers' ? 'Freshers' : 'Middle Management'}`,
+      subheading: activeCategory === 'freshers' 
+        ? 'Strategic career foundation & professional readiness'
+        : 'Leadership development & strategic advancement',
+      packages: categoryPackages.map(pkg => ({
+        id: pkg.id,
+        title: pkg.name,
+        price: `₹${parseFloat(pkg.price).toLocaleString('en-IN')}`,
+        duration: 'package',
+        description: activeCategory === 'freshers' ? 'For College Graduates' : 'For Working Professionals',
+        features: pkg.features,
+        isPopular: pkg.packageType === 'ascend_plus',
+        buttonText: `Choose ${pkg.name}`,
+        category: pkg.category
+      }))
+    };
+  };
+
+  const packageData = getPackageData();
 
   return (
     <section id="pricing" className="py-16 md:py-24 relative overflow-hidden">
@@ -402,16 +434,16 @@ export default function Pricing() {
           >
             <h3 className="fluid-text-3xl font-bold mb-4">
               <span className="bg-gradient-to-r from-brand-teal via-brand-aqua to-brand-teal bg-clip-text text-transparent">
-                {packageData[activeCategory].heading}
+                {packageData.heading}
               </span>
             </h3>
             <p className="fluid-text-lg text-muted-foreground">
-              {packageData[activeCategory].subheading}
+              {packageData.subheading}
             </p>
           </motion.div>
 
           {/* Package Content */}
-          {packageData[activeCategory].comingSoon ? (
+          {packageData.comingSoon ? (
             <motion.div
               className="text-center py-16"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -438,7 +470,7 @@ export default function Pricing() {
             </motion.div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto justify-items-center">
-              {packageData[activeCategory].packages?.map((pkg: any, index: number) => (
+              {packageData.packages?.map((pkg: any, index: number) => (
                 <PricingCard
                   key={`${activeCategory}-${index}`}
                   title={pkg.title}
@@ -448,7 +480,10 @@ export default function Pricing() {
                   features={pkg.features}
                   isPopular={pkg.isPopular}
                   buttonText={pkg.buttonText}
+                  packageId={pkg.id}
+                  category={pkg.category}
                   index={index}
+                  onPurchase={handlePurchase}
                 />
               ))}
             </div>
