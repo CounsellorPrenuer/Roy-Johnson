@@ -1,0 +1,126 @@
+Create a secure, full-stack admin dashboard for my website, accessible at the /admin route. This dashboard will be used to monitor business metrics, view customer payments, and manage contact form submissions.
+
+Core Functional Requirements:
+1. Secure Authentication:
+
+Create a login page at /admin/login.
+
+Access to any page under /admin must be restricted to authenticated admin users only. Unauthorized users should be redirected to the login page.
+
+Implement a secure method for storing admin credentials (e.g., hashed passwords).
+
+2. Main Dashboard / Overview Page (/admin):
+This will be the homepage after a successful login. It should display a summary of key metrics in clear, easy-to-read "stat cards."
+
+Stat Cards to display:
+
+Total Revenue: The sum of all "completed" payments.
+
+Pending Payments: A count of all payments with a "pending" status.
+
+Completed Payments: A count of all payments with a "completed" status.
+
+Total Payments: A count of all payment records (regardless of status).
+
+New Contact Requests: A count of all contact requests with a "new" or "unread" status.
+
+Total Contact Requests: A count of all contact form submissions ever received.
+
+3. Payment Management Page (/admin/payments):
+A dedicated section to view and manage all payments.
+
+Default View: Display a list of the most recent payments (e.g., the last 20).
+
+"View All" Functionality: Include an option or a separate tab to view all payments with pagination (e.g., 20 payments per page).
+
+Data Display: The payments should be displayed in a table with the following columns:
+
+Payment ID
+
+Customer Name
+
+Customer Email
+
+Plan Purchased (e.g., "Ascend", "Ascend Plus")
+
+Amount
+
+Status (e.g., "Completed", "Pending", "Failed")
+
+Date of Payment
+
+Features: The table should be searchable by Customer Name or Email.
+
+4. Contact Request Management Page (/admin/contacts):
+A dedicated section to view messages submitted through the website's contact form.
+
+Functionality: Display a list of the most recent contact requests.
+
+Data Display: The requests should be displayed in a table or list with the following information:
+
+Sender's Name
+
+Sender's Email
+
+Message (a preview, with an option to view the full message)
+
+Date Received
+
+Status (e.g., "New", "Read")
+
+Actions: Allow the admin to mark a message as "Read". New messages should be visually distinct (e.g., bolded).
+
+Technical Specifications & Data Models:
+To support these features, please define and use the following data models:
+
+Payment Model:
+
+id: Unique Identifier
+
+customerName: String
+
+customerEmail: String
+
+planPurchased: String
+
+amount: Number
+
+status: String (Enum: 'completed', 'pending', 'failed')
+
+createdAt: Timestamp
+
+Contact Model:
+
+id: Unique Identifier
+
+name: String
+
+email: String
+
+message: Text
+
+status: String (Enum: 'new', 'read')
+
+submittedAt: Timestamp
+
+AdminUser Model:
+
+id: Unique Identifier
+
+username: String
+
+password: String (Hashed)
+
+Backend:
+
+Create secure REST API endpoints for all CRUD (Create, Read, Update, Delete) operations related to Payments, Contacts, and Admin authentication.
+
+The API should provide aggregated data for the overview dashboard (e.g., an endpoint /api/admin/stats).
+
+Frontend:
+
+The frontend should be a single-page application that communicates with the backend API.
+
+The UI should be clean, responsive, and work well on both desktop and mobile devices.
+
+Use a clear navigation structure (e.g., a sidebar) to switch between the Overview, Payments, and Contacts pages.
