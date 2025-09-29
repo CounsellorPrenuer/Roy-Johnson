@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import express from "express";
+import path from "path";
 import { storage } from "./storage";
 import { insertContactInquirySchema, insertUserSchema, insertBookingSchema, insertPaymentSchema, createOrderSchema, verifyPaymentSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
@@ -9,6 +11,9 @@ import crypto from "crypto";
 import type { Request, Response, NextFunction } from "express";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve attached_assets as static files
+  app.use('/attached_assets', express.static(path.resolve(process.cwd(), 'attached_assets')));
+  
   // Initialize Razorpay
   const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID!,
