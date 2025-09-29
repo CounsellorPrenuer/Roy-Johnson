@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 
 interface AdminAuthContextType {
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (token: string) => void;
   logout: () => Promise<void>;
   token: string | null;
@@ -12,14 +13,41 @@ const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefin
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Function to validate token with backend
+  const validateToken = async (tokenToValidate: string): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/admin/stats', {
+        headers: {
+          'Authorization': `Bearer ${tokenToValidate}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  };
 
   useEffect(() => {
-    // Check for existing token in localStorage
-    const savedToken = localStorage.getItem('admin_token');
-    if (savedToken) {
-      setToken(savedToken);
-      setIsAuthenticated(true);
-    }
+    const initializeAuth = async () => {
+      const savedToken = localStorage.getItem('admin_token');
+      if (savedToken) {
+        // Validate the saved token
+        const isValid = await validateToken(savedToken);
+        if (isValid) {
+          setToken(savedToken);
+          setIsAuthenticated(true);
+        } else {
+          // Token is invalid, remove it
+          localStorage.removeItem('admin_token');
+        }
+      }
+      setIsLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = (adminToken: string) => {
@@ -52,7 +80,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AdminAuthContext.Provider value={{ isAuthenticated, login, logout, token }}>
+    <AdminAuthContext.Provider value={{ isAuthenticated, isLoading, login, logout, token }}>
       {children}
     </AdminAuthContext.Provider>
   );

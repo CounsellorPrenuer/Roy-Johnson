@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,13 +11,20 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function AdminLogin() {
   const [, setLocation] = useLocation();
-  const { login } = useAdminAuth();
+  const { login, isAuthenticated } = useAdminAuth();
   const { toast } = useToast();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLocation('/admin');
+    }
+  }, [isAuthenticated, setLocation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +53,7 @@ export default function AdminLogin() {
           title: "Login Successful",
           description: "Welcome to the admin dashboard",
         });
-        setLocation('/admin');
+        // The redirect will be handled by the useEffect when isAuthenticated becomes true
       } else {
         setError(data.error || 'Invalid credentials');
       }

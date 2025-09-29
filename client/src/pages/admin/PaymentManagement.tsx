@@ -70,19 +70,9 @@ export default function PaymentManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  // For now, we need to get all payments - the backend doesn't have a direct /api/admin/payments endpoint
-  // We'll need to use the existing payments API with admin auth
   const { data: payments = [], isLoading, error } = useQuery<Payment[]>({
     queryKey: ['/api/admin/payments'],
-    queryFn: async () => {
-      // Since we don't have a direct admin payments endpoint, we'll need to add one
-      // For now, this will fail gracefully
-      const response = await fetch('/api/admin/payments');
-      if (!response.ok) {
-        throw new Error('Failed to fetch payments');
-      }
-      return response.json();
-    },
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // Filter payments based on search and status
