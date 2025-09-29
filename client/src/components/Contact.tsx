@@ -368,55 +368,67 @@ export default function Contact() {
           </motion.p>
 
           {/* Stats Section */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-            {[
-              { number: '3,50,000+', label: 'Students and Professionals\nMentored' },
-              { number: '240+', label: 'Corporate Partners' },
-              { number: '350+', label: 'Schools and College\nPartners' },
-              { number: '1000+', label: 'Hours of Career Webinars' }
-            ].map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-                transition={{ duration: 0.5, delay: 1.8 + index * 0.1 }}
-                whileHover={{ scale: 1.05 }}
-                className="text-center"
-              >
-                <Card className="glass-card border-brand-aqua/20 hover:border-brand-aqua/40 transition-all duration-300 hover:shadow-lg p-6">
-                  <motion.div
-                    className="fluid-text-3xl font-bold text-brand-teal mb-2"
-                    animate={{ 
-                      scale: [1, 1.1, 1],
-                      color: ['#003752', '#408FA4', '#003752']
-                    }}
-                    transition={{ 
-                      duration: 2, 
-                      repeat: Infinity, 
-                      ease: "easeInOut",
-                      delay: index * 0.5
-                    }}
-                  >
-                    {stat.number}
-                  </motion.div>
-                  <div className="fluid-text-sm text-muted-foreground whitespace-pre-line leading-relaxed">
-                    {stat.label}
+          <div className="bg-gradient-to-br from-background via-brand-light/5 to-background p-8 rounded-2xl mb-16">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { number: '3,50,000+', label: 'Students and Professionals', sublabel: 'Mentored' },
+                { number: '240+', label: 'Corporate Partners', sublabel: '' },
+                { number: '350+', label: 'Schools and College', sublabel: 'Partners' },
+                { number: '1000+', label: 'Hours of Career Webinars', sublabel: '' }
+              ].map((stat, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+                  transition={{ duration: 0.5, delay: 1.8 + index * 0.1 }}
+                  whileHover={{ y: -8, scale: 1.03 }}
+                  className="text-center group"
+                >
+                  <div className="bg-white/80 backdrop-blur-sm border border-brand-aqua/10 rounded-xl p-6 h-full hover:shadow-xl hover:border-brand-aqua/30 transition-all duration-500 group-hover:bg-white/90">
+                    <motion.div
+                      className="fluid-text-4xl lg:fluid-text-5xl font-bold mb-3 bg-gradient-to-br from-brand-teal to-brand-aqua bg-clip-text text-transparent"
+                      animate={{ 
+                        scale: [1, 1.05, 1]
+                      }}
+                      transition={{ 
+                        duration: 3, 
+                        repeat: Infinity, 
+                        ease: "easeInOut",
+                        delay: index * 0.8
+                      }}
+                    >
+                      {stat.number}
+                    </motion.div>
+                    <div className="space-y-1">
+                      <div className="fluid-text-sm font-semibold text-brand-teal leading-tight">
+                        {stat.label}
+                      </div>
+                      {stat.sublabel && (
+                        <div className="fluid-text-sm font-semibold text-brand-teal leading-tight">
+                          {stat.sublabel}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </Card>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </div>
           </div>
 
           {/* Mentoria Link Box */}
-          <motion.div
+          <motion.a
+            href="https://mentoria.com"
+            target="_blank"
+            rel="noopener noreferrer"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.8, delay: 2.2 }}
-            whileHover={{ scale: 1.02 }}
-            className="max-w-md mx-auto mb-8"
+            whileHover={{ scale: 1.05, y: -8 }}
+            whileTap={{ scale: 0.98 }}
+            className="block max-w-lg mx-auto mb-8"
+            data-testid="link-mentoria-platform"
           >
-            <Card className="bg-gradient-to-br from-brand-teal to-brand-aqua text-white relative overflow-hidden cursor-pointer"
-                  data-testid="link-mentoria-platform">
+            <div className="bg-gradient-to-br from-brand-teal via-brand-aqua to-brand-teal text-white relative overflow-hidden cursor-pointer rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-500">
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                 animate={{ x: ['-100%', '100%'] }}
@@ -426,25 +438,32 @@ export default function Contact() {
                   ease: "easeInOut"
                 }}
               />
-              <CardContent className="p-8 text-center relative z-10">
+              
+              {/* Decorative elements */}
+              <div className="absolute top-4 right-4 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
+              <div className="absolute bottom-4 left-4 w-16 h-16 bg-white/5 rounded-full blur-lg"></div>
+              
+              <div className="p-10 text-center relative z-10">
                 <motion.div
                   animate={{ 
-                    rotate: [0, 5, -5, 0],
-                    scale: [1, 1.05, 1]
+                    rotate: [0, 2, -2, 0],
+                    scale: [1, 1.02, 1]
                   }}
                   transition={{ 
-                    duration: 2, 
+                    duration: 4, 
                     repeat: Infinity, 
                     ease: "easeInOut"
                   }}
+                  className="space-y-3"
                 >
-                  <div className="fluid-text-2xl font-bold mb-2">MENTOR'A</div>
-                  <div className="fluid-text-lg font-semibold mb-2">MIND AT PEACE</div>
-                  <div className="fluid-text-base opacity-90">Career Discovery Platform</div>
+                  <div className="fluid-text-3xl font-bold tracking-wider">MENTOR'A</div>
+                  <div className="fluid-text-xl font-semibold text-white/90 tracking-wide">MIND AT PEACE</div>
+                  <div className="w-16 h-1 bg-white/60 mx-auto rounded-full my-4"></div>
+                  <div className="fluid-text-lg text-white/80 font-medium">Career Discovery Platform</div>
                 </motion.div>
-              </CardContent>
-            </Card>
-          </motion.div>
+              </div>
+            </div>
+          </motion.a>
 
           <motion.p 
             className="fluid-text-base text-muted-foreground"
