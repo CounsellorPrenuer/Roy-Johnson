@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star, Sparkles } from 'lucide-react';
+import { Check, Star, Sparkles, Bell } from 'lucide-react';
 
 interface PricingCardProps {
   title: string;
@@ -181,54 +182,104 @@ export default function Pricing() {
     triggerOnce: true,
   });
 
-  const plans = [
+  const [activeCategory, setActiveCategory] = useState<'freshers' | 'middle-management' | 'senior-professionals'>('freshers');
+
+  const categories = [
     {
-      title: 'Clarity Session',
-      price: '₹4,999',
-      duration: 'session',
-      description: '90-minute deep-dive session with comprehensive career assessment and personalized action plan.',
-      features: [
-        'Comprehensive career assessment',
-        'Personalized action plan',
-        'Industry insights and trends',
-        'Goal setting framework',
-        'Follow-up resource guide'
-      ],
-      buttonText: 'Book Session'
+      id: 'freshers' as const,
+      title: 'Freshers',
+      subtitle: 'Strategic career foundation & professional readiness'
     },
     {
-      title: 'Career Accelerator',
-      price: '₹19,999',
-      duration: 'package',
-      description: '4 comprehensive sessions including resume optimization, LinkedIn revamp, and interview preparation.',
-      features: [
-        '4 one-on-one coaching sessions',
-        'Resume and cover letter optimization',
-        'LinkedIn profile transformation',
-        'Interview preparation and practice',
-        'Salary negotiation strategies',
-        '30-day email support'
-      ],
-      isPopular: true,
-      buttonText: 'Get Started'
+      id: 'middle-management' as const,
+      title: 'Middle Management',
+      subtitle: 'Leadership development & strategic advancement'
     },
     {
-      title: 'Executive Package',
-      price: '₹29,999',
-      duration: 'package',
-      description: '6 sessions focused on long-term career strategy with ongoing support for senior professionals.',
-      features: [
-        '6 executive coaching sessions',
-        'Long-term career strategy development',
-        'Leadership skills assessment',
-        'Executive presence coaching',
-        'Network building strategies',
-        '90-day ongoing support',
-        'Priority scheduling'
-      ],
-      buttonText: 'Invest Now'
+      id: 'senior-professionals' as const,
+      title: 'Senior Professionals',
+      subtitle: 'Executive transformation & C-suite positioning'
     }
   ];
+
+  const packageData = {
+    freshers: {
+      heading: 'Packages for Freshers',
+      subheading: 'Strategic career foundation & professional readiness',
+      packages: [
+        {
+          title: 'Ascend',
+          price: '₹6,499',
+          duration: 'package',
+          description: 'For College Graduates',
+          features: [
+            'Psychometric assessment to measure your interests, personality and abilities',
+            '1 career coaching session for specialisation/job selection',
+            'Lifetime access to Knowledge Gateway',
+            'Pre-recorded webinars by industry experts'
+          ],
+          buttonText: 'Choose Ascend'
+        },
+        {
+          title: 'Ascend Plus',
+          price: '₹10,599',
+          duration: 'package',
+          description: 'For College Graduates',
+          features: [
+            'Psychometric assessment to measure your interests, personality and abilities',
+            '3 career coaching sessions',
+            'Lifetime access to Knowledge Gateway',
+            'Guidance on Masters\' admissions in India and abroad',
+            'CV reviews during internships/graduation',
+            'Guidance until you get into the job you love',
+            'Career helpline access'
+          ],
+          isPopular: true,
+          buttonText: 'Choose Ascend Plus'
+        }
+      ]
+    },
+    'middle-management': {
+      heading: 'Packages for Middle Management',
+      subheading: 'Leadership development & strategic advancement',
+      packages: [
+        {
+          title: 'Ascend',
+          price: '₹6,499',
+          duration: 'package',
+          description: 'For Working Professionals',
+          features: [
+            'Psychometric assessment to measure your interests, personality and abilities',
+            '1 career coaching session focused on career transition, growth and upskilling',
+            'Lifetime access to Knowledge Gateway',
+            'Pre-recorded webinars by industry experts'
+          ],
+          buttonText: 'Choose Ascend'
+        },
+        {
+          title: 'Ascend Plus',
+          price: '₹10,599',
+          duration: 'package',
+          description: 'For Working Professionals',
+          features: [
+            'Psychometric assessment to measure your interests, personality and abilities',
+            '3 career coaching sessions',
+            'Lifetime access to Knowledge Gateway',
+            'CV reviews and Interview Prep',
+            'Guidance until you get into the job you love',
+            'Career helpline access'
+          ],
+          isPopular: true,
+          buttonText: 'Choose Ascend Plus'
+        }
+      ]
+    },
+    'senior-professionals': {
+      heading: 'Packages for Senior Professionals',
+      subheading: 'Executive transformation & C-suite positioning',
+      comingSoon: true
+    }
+  };
 
   return (
     <section id="pricing" className="py-16 md:py-24 relative overflow-hidden">
@@ -291,21 +342,118 @@ export default function Pricing() {
           </motion.p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto items-center">
-          {plans.map((plan, index) => (
-            <PricingCard
-              key={index}
-              title={plan.title}
-              price={plan.price}
-              duration={plan.duration}
-              description={plan.description}
-              features={plan.features}
-              isPopular={plan.isPopular}
-              buttonText={plan.buttonText}
-              index={index}
-            />
-          ))}
-        </div>
+        {/* Category Selector Tabs */}
+        <motion.div 
+          className="mb-12"
+          initial={{ opacity: 0, y: 30 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            {categories.map((category, index) => (
+              <motion.div
+                key={category.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                transition={{ duration: 0.5, delay: 0.8 + index * 0.1 }}
+                whileHover={{ y: -5 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Card
+                  className={`cursor-pointer transition-all duration-300 ${
+                    activeCategory === category.id
+                      ? 'glass-card ring-2 ring-brand-aqua shadow-lg border-brand-aqua/40'
+                      : 'glass-card border-brand-aqua/20 hover:border-brand-aqua/30 hover:shadow-md'
+                  }`}
+                  onClick={() => setActiveCategory(category.id)}
+                  data-testid={`tab-${category.id}`}
+                >
+                  <CardHeader className="text-center p-6">
+                    <CardTitle className={`fluid-text-xl font-bold mb-2 ${
+                      activeCategory === category.id 
+                        ? 'text-brand-teal' 
+                        : 'text-muted-foreground'
+                    }`}>
+                      {category.title}
+                    </CardTitle>
+                    <CardDescription className="fluid-text-sm leading-relaxed">
+                      {category.subtitle}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Dynamic Content Area */}
+        <motion.div
+          key={activeCategory}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {/* Category Heading */}
+          <motion.div 
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <h3 className="fluid-text-3xl font-bold mb-4">
+              <span className="bg-gradient-to-r from-brand-teal via-brand-aqua to-brand-teal bg-clip-text text-transparent">
+                {packageData[activeCategory].heading}
+              </span>
+            </h3>
+            <p className="fluid-text-lg text-muted-foreground">
+              {packageData[activeCategory].subheading}
+            </p>
+          </motion.div>
+
+          {/* Package Content */}
+          {packageData[activeCategory].comingSoon ? (
+            <motion.div
+              className="text-center py-16"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <Card className="glass-card border-brand-aqua/20 max-w-md mx-auto">
+                <CardContent className="p-8 text-center">
+                  <Bell className="w-16 h-16 text-brand-aqua mx-auto mb-6" />
+                  <h4 className="fluid-text-2xl font-bold text-brand-teal mb-4">
+                    Packages Coming Soon
+                  </h4>
+                  <p className="fluid-text-base text-muted-foreground mb-6">
+                    We're preparing specialized packages for senior professionals.
+                  </p>
+                  <Button 
+                    className="bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white"
+                    data-testid="button-get-notified"
+                  >
+                    Get Notified When Available
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto justify-items-center">
+              {packageData[activeCategory].packages?.map((pkg: any, index: number) => (
+                <PricingCard
+                  key={`${activeCategory}-${index}`}
+                  title={pkg.title}
+                  price={pkg.price}
+                  duration={pkg.duration}
+                  description={pkg.description}
+                  features={pkg.features}
+                  isPopular={pkg.isPopular}
+                  buttonText={pkg.buttonText}
+                  index={index}
+                />
+              ))}
+            </div>
+          )}
+        </motion.div>
 
         {/* Trust indicators */}
         <motion.div 
