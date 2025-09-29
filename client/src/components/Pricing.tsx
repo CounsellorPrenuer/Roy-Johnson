@@ -192,9 +192,12 @@ export default function Pricing() {
   const [activeCategory, setActiveCategory] = useState<'freshers' | 'middle-management' | 'senior-professionals'>('freshers');
   const { toast } = useToast();
 
+  const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
+
   // Load Razorpay script on component mount
   useEffect(() => {
     loadRazorpayScript().then((loaded) => {
+      setIsRazorpayLoaded(loaded);
       if (!loaded) {
         console.error('Failed to load Razorpay script');
         toast({
@@ -232,6 +235,25 @@ export default function Pricing() {
 
   // Handle package purchase
   const handlePurchase = async (packageId: string) => {
+    // Guard against unloaded SDK or packages
+    if (!isRazorpayLoaded) {
+      toast({
+        title: "Payment System Loading",
+        description: "Payment system is still loading. Please wait a moment and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!packages || packages.length === 0) {
+      toast({
+        title: "Packages Loading",
+        description: "Package information is still loading. Please wait a moment and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       // For demo purposes, using a dummy user ID
       // In production, this would come from authentication context

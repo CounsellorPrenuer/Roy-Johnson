@@ -63,11 +63,12 @@ export const bookings = pgTable("bookings", {
 // Payments table
 export const payments = pgTable("payments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  bookingId: varchar("booking_id").notNull(),
+  bookingId: varchar("booking_id"), // Nullable - set after payment verification
   userId: varchar("user_id").notNull(),
   razorpayPaymentId: text("razorpay_payment_id"),
   razorpayOrderId: text("razorpay_order_id"),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  packageId: varchar("package_id").notNull(), // Store package ID for verification
   status: paymentStatusEnum("status").default("pending"),
   paymentMethod: text("payment_method"),
   transactionDetails: text("transaction_details"), // JSON string for additional details
@@ -135,10 +136,24 @@ export const insertBookingSchema = createInsertSchema(bookings).pick({
 });
 
 export const insertPaymentSchema = createInsertSchema(payments).pick({
-  bookingId: true,
   userId: true,
   amount: true,
+  packageId: true,
   razorpayOrderId: true,
+});
+
+export const createOrderSchema = z.object({
+  packageId: z.string().uuid(),
+  userId: z.string().min(1),
+});
+
+export const verifyPaymentSchema = z.object({
+  razorpay_order_id: z.string().min(1),
+  razorpay_payment_id: z.string().min(1),
+  razorpay_signature: z.string().min(1),
+  paymentId: z.string().uuid(),
+  packageId: z.string().uuid(),
+  userId: z.string().min(1),
 });
 
 // Types

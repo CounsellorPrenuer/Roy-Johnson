@@ -47,6 +47,7 @@ export interface IStorage {
   // Payments
   createPayment(payment: InsertPayment): Promise<Payment>;
   getPaymentById(id: string): Promise<Payment | undefined>;
+  getPaymentByOrderId(orderId: string): Promise<Payment | undefined>;
   updatePaymentStatus(id: string, status: string, paymentId?: string): Promise<void>;
   getUserPayments(userId: string): Promise<Payment[]>;
 }
@@ -183,6 +184,14 @@ export class DatabaseStorage implements IStorage {
       .values(payment)
       .returning();
     return result;
+  }
+
+  async getPaymentByOrderId(orderId: string): Promise<Payment | undefined> {
+    const [payment] = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.razorpayOrderId, orderId));
+    return payment || undefined;
   }
 
   async getPaymentById(id: string): Promise<Payment | undefined> {
