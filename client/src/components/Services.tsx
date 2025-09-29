@@ -24,8 +24,8 @@ function ServiceCard({ icon, title, description, features, index }: ServiceCardP
       initial={{ opacity: 0, y: 50 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
       transition={{ 
-        duration: 0.6, 
-        delay: index * 0.2,
+        duration: 0.3, 
+        delay: index * 0.1,
         ease: "easeOut"
       }}
       whileHover={{ 
@@ -64,8 +64,8 @@ function ServiceCard({ icon, title, description, features, index }: ServiceCardP
                 initial={{ opacity: 0, x: -20 }}
                 animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
                 transition={{ 
-                  duration: 0.4, 
-                  delay: index * 0.2 + featureIndex * 0.1 + 0.3
+                  duration: 0.2, 
+                  delay: index * 0.1 + featureIndex * 0.03 + 0.1
                 }}
               >
                 <motion.div 
@@ -199,13 +199,13 @@ export default function Services() {
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.3 }}
         >
           <motion.h2 
             className="fluid-text-5xl font-bold text-brand-teal mb-6"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
           >
             How We Help You Succeed
           </motion.h2>
@@ -213,7 +213,7 @@ export default function Services() {
             className="fluid-text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
           >
             Comprehensive career guidance tailored to your unique professional journey and aspirations.
           </motion.p>

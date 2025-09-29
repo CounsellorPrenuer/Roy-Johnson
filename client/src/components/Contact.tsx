@@ -115,13 +115,13 @@ export default function Contact() {
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.3 }}
         >
           <motion.h2 
             className="fluid-text-5xl font-bold mb-6"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
           >
             <span className="bg-gradient-to-r from-brand-teal via-brand-aqua to-brand-teal bg-clip-text text-transparent">
               Let's Start Your Journey
@@ -131,7 +131,7 @@ export default function Contact() {
             className="fluid-text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
           >
             Ready to take the next step in your career? Get in touch and let's discuss how we can help you achieve your goals.
           </motion.p>
@@ -142,7 +142,7 @@ export default function Contact() {
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
           >
             <Card className="glass-card border-brand-aqua/20 hover:border-brand-aqua/40 transition-all duration-300 hover:shadow-xl">
               <CardHeader>
@@ -156,7 +156,7 @@ export default function Contact() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                    transition={{ duration: 0.5, delay: 0.8 }}
+                    transition={{ duration: 0.2, delay: 0.3 }}
                   >
                     <Input
                       name="name"
@@ -171,7 +171,7 @@ export default function Contact() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                    transition={{ duration: 0.5, delay: 0.9 }}
+                    transition={{ duration: 0.2, delay: 0.35 }}
                   >
                     <Input
                       name="email"
@@ -187,7 +187,7 @@ export default function Contact() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                    transition={{ duration: 0.5, delay: 1 }}
+                    transition={{ duration: 0.2, delay: 0.4 }}
                   >
                     <Input
                       name="phone"
@@ -202,7 +202,7 @@ export default function Contact() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                    transition={{ duration: 0.5, delay: 1.1 }}
+                    transition={{ duration: 0.2, delay: 0.45 }}
                   >
                     <Textarea
                       name="message"
@@ -218,7 +218,7 @@ export default function Contact() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                    transition={{ duration: 0.5, delay: 1.2 }}
+                    transition={{ duration: 0.2, delay: 0.5 }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -264,7 +264,7 @@ export default function Contact() {
             className="space-y-8"
             initial={{ opacity: 0, x: 50 }}
             animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
+            transition={{ duration: 0.3, delay: 0.25 }}
           >
             <motion.div
               whileHover={{ scale: 1.02 }}
