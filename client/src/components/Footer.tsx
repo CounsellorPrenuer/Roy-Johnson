@@ -103,7 +103,8 @@ export default function Footer() {
             onClick={scrollToTop}
             size="icon"
             variant="outline"
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 backdrop-blur-sm"
+            className="bg-white/10 border-white/20 text-white backdrop-blur-sm"
+            data-testid="button-back-to-top"
           >
             <ArrowUp className="w-4 h-4" />
           </Button>
@@ -259,6 +260,18 @@ export default function Footer() {
               ))}
             </div>
           </div>
+
+          {/* Partnership Line */}
+          <motion.div 
+            className="mt-6 text-center"
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: 0.6, delay: 1.6 }}
+          >
+            <p className="text-white/60 fluid-text-sm">
+              In partnership with Mentoria for enhanced career guidance services.
+            </p>
+          </motion.div>
         </motion.div>
       </div>
     </motion.footer>

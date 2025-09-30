@@ -131,7 +131,7 @@ export default function Testimonials() {
                 </div>
 
                 {/* Content */}
-                <p className="text-muted-foreground fluid-text-base leading-relaxed mb-6 flex-grow">
+                <p className="text-muted-foreground fluid-text-base leading-relaxed mb-6 flex-grow" data-testid={`text-testimonial-content-${index}`}>
                   "{testimonial.content}"
                 </p>
 
@@ -141,13 +141,13 @@ export default function Testimonials() {
                     {testimonial.name.charAt(0)}
                   </div>
                   <div>
-                    <div className="font-semibold text-foreground" data-testid={`testimonial-name-${index}`}>
+                    <div className="font-semibold text-foreground" data-testid={`text-testimonial-name-${index}`}>
                       {testimonial.name}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-muted-foreground" data-testid={`text-testimonial-role-${index}`}>
                       {testimonial.role}
                     </div>
-                    <div className="text-xs text-brand-aqua">
+                    <div className="text-xs text-brand-aqua" data-testid={`text-testimonial-company-${index}`}>
                       {testimonial.company}
                     </div>
                   </div>
