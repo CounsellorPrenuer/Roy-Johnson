@@ -112,8 +112,7 @@ export default function About() {
               transition={{ duration: 0.4, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
               <h2 className="fluid-text-5xl font-bold text-brand-teal mb-4">
-                Meet 
-                <motion.span
+                Meet <motion.span
                   className="bg-gradient-to-r from-brand-teal to-brand-aqua bg-clip-text text-transparent"
                   animate={{ 
                     backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
