@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import DiscoveryCallModal from './DiscoveryCallModal';
-// TODO: Fix image import path after build setup
-const logoPath = "/attached_assets/logo_1759141877823.png";
+const logoPath = "/attached_assets/Career Plans Logo final_1759473980192.png";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -50,7 +49,7 @@ export default function Navbar() {
             <motion.img
               src={logoPath}
               alt="Career Plans Logo"
-              className="h-10 w-auto"
+              className="h-16 w-auto"
               data-testid="img-logo"
               animate={isScrolled ? { scale: 0.9 } : { scale: 1 }}
               transition={{ duration: 0.3 }}
