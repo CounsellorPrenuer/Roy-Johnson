@@ -84,7 +84,12 @@ function ServiceCard({ icon, title, description, features, index }: ServiceCardP
             <Button 
               variant="outline"
               className="w-full glass-card border-brand-aqua/40 text-brand-teal hover:bg-brand-aqua/10 group/btn transition-all duration-300"
-              onClick={() => console.log(`Learn more about ${title}`)}
+              onClick={() => {
+                const contactSection = document.getElementById('contact');
+                if (contactSection) {
+                  contactSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
               data-testid={`button-learn-${title.toLowerCase().replace(/\s+/g, '-')}`}
             >
               Learn More

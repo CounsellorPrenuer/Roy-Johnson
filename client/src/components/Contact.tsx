@@ -341,11 +341,11 @@ export default function Contact() {
                     >
                       {item.icon}
                     </motion.div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="font-semibold text-brand-teal group-hover:text-brand-aqua transition-colors duration-300 fluid-text-sm mb-1">
                         {item.label}
                       </div>
-                      <div className="text-muted-foreground fluid-text-xs mb-1">
+                      <div className="text-muted-foreground fluid-text-xs mb-1 break-all">
                         {item.value}
                       </div>
                       <div className="text-muted-foreground/70 fluid-text-xs">
