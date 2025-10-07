@@ -71,8 +71,8 @@ export default function Contact() {
     {
       icon: <Mail className="w-6 h-6" />,
       label: 'Email',
-      value: 'royjohns@gmail.com',
-      href: 'mailto:royjohns@gmail.com',
+      value: 'royjohnson@careerplans.pro',
+      href: 'mailto:royjohnson@careerplans.pro',
       description: 'Send us an email'
     },
     {
