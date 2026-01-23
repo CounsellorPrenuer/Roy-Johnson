@@ -374,7 +374,16 @@ export default function Pricing() {
         }));
     }
 
-    packagesToDisplay.sort((a: any, b: any) => a.id.localeCompare(b.id));
+    // Sort by logical order: base plan first, then premium
+    const planOrder = ['discover', 'discovery_plus', 'achieve', 'achieve_plus', 'ascend', 'ascend_plus'];
+    packagesToDisplay.sort((a: any, b: any) => {
+      const aIndex = planOrder.indexOf(a.planId);
+      const bIndex = planOrder.indexOf(b.planId);
+      // If both found in order array, sort by that order
+      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      // Otherwise fall back to id comparison
+      return a.id.localeCompare(b.id);
+    });
 
     return {
       heading: info.title,
