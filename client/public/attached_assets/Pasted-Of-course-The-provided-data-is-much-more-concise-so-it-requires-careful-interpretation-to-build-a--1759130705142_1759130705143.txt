@@ -1,0 +1,178 @@
+Of course. The provided data is much more concise, so it requires careful interpretation to build a complete and professional website. Based on your request, I will create another detailed prompt that instructs the Replit agent to build a "stunningly beautiful" and "super modern" website for Roy Johnson, using the same high-quality example as a reference.
+
+You can copy and paste the following prompt directly into your Replit agent.
+
+Replit Agent Prompt: Create a Modern Career Coaching Website for Roy Johnson
+You are an expert full-stack web developer agent specializing in creating visually stunning, modern, and responsive portfolio websites using React with Vite and Tailwind CSS. Your task is to build a complete, fully functional website for a career coach, Roy Johnson, and his brand, Career Plans.
+
+Primary Goal: Replicate the design philosophy, modern aesthetic, and interactive nature of the provided HTML example (Leadcrest Consulting), but customize it entirely with Roy Johnson's branding, color scheme, and services. The final site must be premium, professional, and client-focused.
+
+1. Core Technical Stack & Setup
+Framework: React with Vite.
+
+Styling: Tailwind CSS.
+
+File Structure: Organize the project into logical directories: src/components (for Navbar, Hero, ServiceCard, etc.) and src/assets (for the logo and profile picture).
+
+2. Design Language & Inspiration Analysis
+Strictly adhere to the design principles found in the leadcrestconsulting.com HTML example. This includes:
+
+Layout & Spacing: Use clean, responsive grids and generous whitespace.
+
+Color Palette: The client has provided specific brand colors. Build the entire palette around them:
+
+Primary Dark Teal: #003752 (Use for headlines, dark backgrounds, primary UI elements).
+
+Primary Aqua: #408FA4 (Use for accent colors, buttons, gradients, and highlights).
+
+Background: Use a very light, clean off-white or light gray (e.g., #F8F9FA) to make the teal and aqua colors pop.
+
+Gradients: Create smooth gradients using the dark teal and aqua for backgrounds, buttons, and decorative elements.
+
+UI Elements:
+
+Implement Glassmorphism (backdrop-blur) effects for cards and overlays.
+
+Use soft, professional shadows (shadow-lg, shadow-xl) to give elements depth.
+
+All interactive elements must have smooth hover effects (scaling, color transitions, etc.).
+
+Animations: Use subtle on-scroll fade-in and slide-in animations to create a dynamic user experience.
+
+3. Branding & Core Identity
+Brand Name: Career Plans
+
+Counselor's Name: Roy Johnson
+
+Logo: The logo is provided. Use the image from this Google Drive link: https://drive.google.com/open?id=1Tkc5taeTVF3iczH4zKw1FEZFiPmPCMOJ
+
+Profile Picture: Use the image from this Google Drive link for the "About Me" section: https://drive.google.com/open?id=1fK2SInx9qPfbBvrtP5Zi_79CaRWwzPDA
+
+Typography: Use a clean, modern sans-serif font pairing. For example, use "Lexend" for headings (bold and impactful) and "Inter" for body text (highly readable).
+
+4. Website Structure & Content (Section by Section)
+Create a single-page website with a logical flow and smooth-scrolling navigation.
+
+a. Navbar
+Style: Sticky, with a semi-transparent blurred background that becomes opaque on scroll.
+
+Content:
+
+Logo (left).
+
+Navigation Links: About, Services, Blog, Contact.
+
+CTA Button (right): "Book a Discovery Call" with a gradient (#003752 to #408FA4).
+
+b. Hero Section
+Layout: Full-screen, impactful, with abstract gradient shapes in the background.
+
+Content:
+
+Main Headline: A powerful, benefit-driven headline like:
+
+Chart Your Course.
+
+Unlock Your Professional Future.
+
+Strategic Guidance For Your Career.
+
+Sub-headline: "Expert career planning and guidance to help you navigate your professional journey with clarity and confidence."
+
+CTA Buttons:
+
+"Explore Services" (Primary, gradient-filled).
+
+"Book a Free Consultation" (Secondary, outline style with aqua text).
+
+Key Stats (below CTAs): Since stats were not provided, use compelling placeholder statistics to build trust:
+
+15+ Years of Industry Experience
+
+500+ Professionals Guided
+
+98% Success Rate
+
+c. Services Section
+Headline: "How We Help You Succeed"
+
+Layout: A grid of premium, icon-driven cards with hover effects.
+
+Content: The form only listed "Career Guidance." Expand this into a full suite of services under the "Career Plans" brand:
+
+Strategic Career Planning: Helping you define and achieve your long-term professional goals.
+
+Resume & LinkedIn Optimization: Crafting a powerful personal brand that gets you noticed.
+
+Interview Preparation & Coaching: Building the confidence and skills to ace any interview.
+
+Career Transition Support: Guiding you through the process of changing roles or industries.
+
+d. About Me Section
+Layout: A two-column layout: Roy's profile picture on one side, text on the other.
+
+Content:
+
+Image: Use his profile picture in a modern, slightly rounded frame.
+
+Headline: Meet Roy Johnson
+
+Sub-headline: Your Strategic Career Partner
+
+Bio: CRITICAL: The bio was not provided. You must write a professional and compelling placeholder bio. It should be 2-3 paragraphs and convey expertise and passion. Example:
+
+"With over 15 years of experience in talent development and professional coaching, Roy Johnson founded Career Plans with a single mission: to empower individuals to take control of their professional lives. He believes that a fulfilling career is not found by chance, but built by design.
+
+Roy's approach combines deep industry insight with personalized, data-driven strategies. He specializes in helping professionals at all levels—from recent graduates to seasoned executives—navigate the complexities of the modern job market, build on their strengths, and create actionable plans for success. Whether you're seeking a promotion, changing industries, or just starting, Roy is the dedicated partner you need to turn your career ambitions into reality."
+
+e. Packages & Payments Section
+Headline: "Invest in Your Future"
+
+Layout: A three-card pricing table.
+
+Content (Placeholder Packages):
+
+Clarity Session: 90-minute deep-dive session, career assessment, action plan. Price: ₹4,999.
+
+Career Accelerator: 4 sessions, resume & LinkedIn revamp, interview prep. Price: ₹19,999.
+
+Executive Package: 6 sessions, long-term strategy, ongoing support. Price: ₹29,999.
+
+Payment Integration: Each package card must have a "Get Started" / "Pay Now" button that integrates with Razorpay.
+
+f. Blog & Testimonials Sections
+Layout: Combine into one section or keep separate. Use placeholders as requested.
+
+Testimonials: Create a slider with 3 placeholder quotes. Example: "Roy's guidance was a game-changer for my job search. I landed my dream role within a month!" - Placeholder Name, Software Engineer.
+
+Blog: A grid of 3 "Latest Insights" cards linking to a full blog page. Use placeholder posts like "The Ultimate Guide to Nailing Your Next Interview" and "Is It Time for a Career Change?".
+
+g. Contact & Footer
+Contact Section: A form (Name, Email, Phone, Message) next to his contact details: royjohns@gmail.com, +91 80759 15530, and social media icons.
+
+Footer: A comprehensive, dark-themed footer (#003752 background) with links, logo, and social media handles for LinkedIn and Instagram using the provided URLs.
+
+Instagram: https://www.instagram.com/careerplanspro
+
+LinkedIn: https://www.linkedin.com/in/roy-johnson-10355b4/
+
+5. Key Functionality & Integrations
+Razorpay Integration:
+
+The "Pay Now" buttons must trigger the Razorpay payment modal with the correct amount.
+
+Use Razorpay's test mode credentials as placeholders in the code.
+
+Show a success confirmation message after a mock payment.
+
+Contact Form: Implement client-side validation. On submission, display a "Thank you!" message without a page reload.
+
+Responsiveness: The site must be flawlessly responsive on all devices.
+
+SEO & Metadata:
+
+Title: Career Plans - Strategic Career Guidance by Roy Johnson
+
+Meta Description: Achieve your professional goals with Career Plans. Expert career guidance, interview coaching, and resume optimization from Roy Johnson.
+
+Keywords: career guidance, career coach, Roy Johnson, Career Plans, job search, interview preparation, career transition, resume writing.

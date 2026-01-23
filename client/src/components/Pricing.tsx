@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Star, Sparkles, Bell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { loadRazorpayScript } from '@/lib/razorpay';
-import PaymentContactModal from './PaymentContactModal';
+import { RazorpayButton } from './RazorpayButton';
 import type { CoachingPackage } from '@shared/schema';
+
+// Extended type to include paymentButtonId since we added it to mock data
+interface ExtendedCoachingPackage extends CoachingPackage {
+  paymentButtonId?: string;
+}
 
 interface PricingCardProps {
   title: string;
@@ -22,10 +26,10 @@ interface PricingCardProps {
   index: number;
   packageId: string;
   category: string;
-  onPurchase: (packageId: string) => void;
+  paymentButtonId?: string;
 }
 
-function PricingCard({ title, price, duration, description, features, isPopular, buttonText, index, packageId, category, onPurchase }: PricingCardProps) {
+function PricingCard({ title, price, duration, description, features, isPopular, buttonText, index, packageId, category, paymentButtonId }: PricingCardProps) {
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
@@ -36,22 +40,21 @@ function PricingCard({ title, price, duration, description, features, isPopular,
       ref={ref}
       initial={{ opacity: 0, y: 50 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-      transition={{ 
-        duration: 0.5, 
+      transition={{
+        duration: 0.5,
         delay: index * 0.15,
         ease: [0.25, 0.46, 0.45, 0.94]
       }}
-      whileHover={{ 
+      whileHover={{
         y: -10,
         transition: { duration: 0.3 }
       }}
       className={`relative ${isPopular ? 'scale-110 z-10' : ''}`}
     >
-      <Card className={`relative overflow-hidden transition-all duration-500 hover:shadow-2xl h-full ${
-        isPopular 
-          ? 'glass-card ring-2 ring-brand-aqua shadow-xl' 
-          : 'glass-card border-brand-aqua/20 hover:border-brand-aqua/40'
-      }`}>
+      <Card className={`relative overflow-hidden transition-all duration-500 hover:shadow-2xl h-full ${isPopular
+        ? 'glass-card ring-2 ring-brand-aqua shadow-xl'
+        : 'glass-card border-brand-aqua/20 hover:border-brand-aqua/40'
+        }`}>
         {/* Animated gradient background for popular card */}
         {isPopular && (
           <motion.div
@@ -70,9 +73,9 @@ function PricingCard({ title, price, duration, description, features, isPopular,
             }}
           />
         )}
-        
+
         {isPopular && (
-          <motion.div 
+          <motion.div
             className="absolute top-0 left-0 right-0"
             initial={{ y: -20, opacity: 0 }}
             animate={inView ? { y: 0, opacity: 1 } : { y: -20, opacity: 0 }}
@@ -95,7 +98,7 @@ function PricingCard({ title, price, duration, description, features, isPopular,
             </div>
           </motion.div>
         )}
-        
+
         <CardHeader className={`text-center relative z-10 ${isPopular ? 'pt-16' : 'pt-6'}`}>
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -104,7 +107,7 @@ function PricingCard({ title, price, duration, description, features, isPopular,
           >
             <CardTitle className="fluid-text-2xl font-bold text-brand-teal mb-6">{title}</CardTitle>
             <div className="mb-6">
-              <motion.span 
+              <motion.span
                 className="fluid-text-4xl font-bold bg-gradient-to-r from-brand-teal to-brand-aqua bg-clip-text text-transparent"
                 animate={isPopular ? {
                   scale: [1, 1.05, 1]
@@ -124,17 +127,17 @@ function PricingCard({ title, price, duration, description, features, isPopular,
             </CardDescription>
           </motion.div>
         </CardHeader>
-        
+
         <CardContent className="pt-0 relative z-10">
           <ul className="space-y-4 mb-8">
             {features.map((feature, featureIndex) => (
-              <motion.li 
-                key={featureIndex} 
+              <motion.li
+                key={featureIndex}
                 className="flex items-start gap-3"
                 initial={{ opacity: 0, x: -20 }}
                 animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
-                transition={{ 
-                  duration: 0.3, 
+                transition={{
+                  duration: 0.3,
                   delay: index * 0.15 + featureIndex * 0.06 + 0.4,
                   ease: [0.25, 0.46, 0.45, 0.94]
                 }}
@@ -149,40 +152,33 @@ function PricingCard({ title, price, duration, description, features, isPopular,
               </motion.li>
             ))}
           </ul>
-          
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Button
-              className={`w-full font-semibold py-4 fluid-text-base relative overflow-hidden ${
-                isPopular
-                  ? 'bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white shadow-lg'
-                  : 'glass-card border-2 border-brand-aqua text-brand-teal hover:bg-brand-aqua/10'
-              }`}
-              onClick={() => onPurchase(packageId)}
-              data-testid={`button-${title.toLowerCase().replace(/\s+/g, '-')}`}
-            >
-              <span className="relative z-10">{buttonText}</span>
-              {isPopular && (
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                  animate={{ x: ['-100%', '100%'] }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    repeatDelay: 2,
-                    ease: "easeInOut"
-                  }}
-                />
-              )}
-            </Button>
-          </motion.div>
+
+          <div className="w-full flex justify-center min-h-[50px]">
+            {paymentButtonId ? (
+              <RazorpayButton paymentButtonId={paymentButtonId} />
+            ) : (
+              <div className="text-brand-teal font-medium">Contact for Pricing</div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </motion.div>
   );
 }
+
+
+import { client } from '@/lib/sanity';
+import { MOCK_PACKAGES } from '@/lib/mock_data';
+
+// Static map of ID and payment button IDs to ensure secure payments logic remains static
+const PACKAGE_CONFIG: { [key: string]: { id: string; paymentButtonId: string } } = {
+  'discover': { id: 'pkg_1', paymentButtonId: 'pl_RwDuOx96VYrsyN' },
+  'discovery_plus': { id: 'pkg_2', paymentButtonId: 'pl_RwDq8XpK76OhB3' },
+  'achieve': { id: 'pkg_3', paymentButtonId: 'pl_RwDxvLPQP7j4rG' },
+  'achieve_plus': { id: 'pkg_4', paymentButtonId: 'pl_RwDzfVkQYEdAIf' },
+  'ascend': { id: 'pkg_5', paymentButtonId: 'pl_RwE1evNHrHWJDW' },
+  'ascend_plus': { id: 'pkg_6', paymentButtonId: 'pl_RwE3WEILWB9WeJ' }
+};
 
 export default function Pricing() {
   const { ref, inView } = useInView({
@@ -193,29 +189,24 @@ export default function Pricing() {
   const [activeCategory, setActiveCategory] = useState<'freshers' | 'middle-management' | 'senior-professionals'>('freshers');
   const { toast } = useToast();
 
-  const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState<{id: string, name: string, price: string} | null>(null);
+  // Fetch packages from Sanity
+  // NOTE: We fetch TEXT content from Sanity, but logic comes from static map
+  const [sanityPackages, setSanityPackages] = useState<any[] | null>(null);
 
-  // Load Razorpay script on component mount
   useEffect(() => {
-    loadRazorpayScript().then((loaded) => {
-      setIsRazorpayLoaded(loaded);
-      if (!loaded) {
-        console.error('Failed to load Razorpay script');
-        toast({
-          title: "Payment System Error",
-          description: "Failed to load payment system. Please refresh the page.",
-          variant: "destructive",
-        });
+    const fetchPricing = async () => {
+      try {
+        const query = `*[_type == "pricing"]`;
+        const result = await client.fetch(query);
+        setSanityPackages(result);
+      } catch (error) {
+        console.error("Failed to fetch pricing:", error);
+        setSanityPackages([]);
       }
-    });
-  }, [toast]);
+    };
 
-  // Fetch packages from API
-  const { data: packages = [], isLoading } = useQuery<CoachingPackage[]>({
-    queryKey: ['/api/packages'],
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+    fetchPricing();
+  }, []);
 
   const categories = [
     {
@@ -235,84 +226,87 @@ export default function Pricing() {
     }
   ];
 
-  // Handle package purchase
-  const handlePurchase = async (packageId: string) => {
-    // Guard against unloaded SDK or packages
-    if (!isRazorpayLoaded) {
-      toast({
-        title: "Payment System Loading",
-        description: "Payment system is still loading. Please wait a moment and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!packages || packages.length === 0) {
-      toast({
-        title: "Packages Loading",
-        description: "Package information is still loading. Please wait a moment and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Find the selected package
-    const pkg = packages.find(p => p.id === packageId);
-    if (!pkg) {
-      toast({
-        title: "Package Not Found",
-        description: "The selected package could not be found. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Open contact modal instead of direct payment
-    setSelectedPackage({
-      id: pkg.id,
-      name: pkg.name,
-      price: `₹${pkg.price}`
-    });
-  };
 
   // Transform API packages to match component structure
+  // Transform API packages to match component structure
   const getPackageData = () => {
-    if (!packages || packages.length === 0) {
-      return {
-        heading: 'Loading packages...',
-        subheading: '',
-        packages: []
-      };
+    const getCategoryInfo = (cat: string) => {
+      switch (cat) {
+        case 'senior-professionals':
+          return {
+            title: 'Packages for Senior Professionals',
+            subtitle: 'Executive transformation & C-suite positioning',
+            desc: 'For Senior Executives'
+          };
+        case 'middle-management':
+          return {
+            title: 'Packages for Middle Management',
+            subtitle: 'Leadership development & strategic advancement',
+            desc: 'For Working Professionals'
+          };
+        default:
+          return {
+            title: 'Packages for Freshers',
+            subtitle: 'Strategic career foundation & professional readiness',
+            desc: 'For College Graduates'
+          };
+      }
+    };
+
+    const info = getCategoryInfo(activeCategory);
+    let packagesToDisplay = [];
+
+    if (sanityPackages && sanityPackages.length > 0) {
+      packagesToDisplay = sanityPackages
+        .filter((pkg: any) => pkg.category === activeCategory)
+        .map((pkg: any) => {
+          const config = PACKAGE_CONFIG[pkg.packageType];
+          // Determine ID securely
+          const id = config ? config.id : `sanity-${pkg._id}`;
+          // Determine button ID securely
+          const paymentButtonId = config ? config.paymentButtonId : undefined;
+
+          return {
+            id,
+            title: pkg.title,
+            price: pkg.price ? `₹${pkg.price}` : 'Contact for Price',
+            duration: 'package',
+            description: pkg.description || info.desc,
+            features: pkg.features || [],
+            isPopular: pkg.isPopular,
+            buttonText: config ? `Choose ${pkg.title}` : 'Contact Us',
+            category: pkg.category,
+            paymentButtonId
+          };
+        });
+    } else {
+      // Fallback
+      packagesToDisplay = MOCK_PACKAGES
+        .filter(pkg => pkg.category === activeCategory)
+        .map(pkg => ({
+          id: pkg.id,
+          title: pkg.name,
+          price: `₹${parseFloat(pkg.price).toLocaleString('en-IN')}`,
+          duration: 'package',
+          description: info.desc,
+          features: pkg.features,
+          isPopular: pkg.packageType === 'ascend_plus',
+          buttonText: `Choose ${pkg.name}`,
+          category: pkg.category,
+          paymentButtonId: pkg.paymentButtonId
+        }));
     }
 
-    const categoryPackages = packages.filter(pkg => pkg.category === activeCategory);
-    
-    if (activeCategory === 'senior-professionals') {
-      return {
-        heading: 'Packages for Senior Professionals',
-        subheading: 'Executive transformation & C-suite positioning',
-        comingSoon: true
-      };
-    }
+    packagesToDisplay.sort((a: any, b: any) => a.id.localeCompare(b.id));
 
     return {
-      heading: `Packages for ${activeCategory === 'freshers' ? 'Freshers' : 'Middle Management'}`,
-      subheading: activeCategory === 'freshers' 
-        ? 'Strategic career foundation & professional readiness'
-        : 'Leadership development & strategic advancement',
-      packages: categoryPackages.map(pkg => ({
-        id: pkg.id,
-        title: pkg.name,
-        price: `₹${parseFloat(pkg.price).toLocaleString('en-IN')}`,
-        duration: 'package',
-        description: activeCategory === 'freshers' ? 'For College Graduates' : 'For Working Professionals',
-        features: pkg.features,
-        isPopular: pkg.packageType === 'ascend_plus',
-        buttonText: `Choose ${pkg.name}`,
-        category: pkg.category
-      }))
+      heading: info.title,
+      subheading: info.subtitle,
+      packages: packagesToDisplay
     };
   };
+
+  if (sanityPackages === null) return null;
 
   const packageData = getPackageData();
 
@@ -350,14 +344,14 @@ export default function Pricing() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <motion.div 
+        <motion.div
           ref={ref}
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.8 }}
         >
-          <motion.h2 
+          <motion.h2
             className="fluid-text-5xl font-bold mb-6"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
@@ -367,7 +361,7 @@ export default function Pricing() {
               Invest in Your Future
             </span>
           </motion.h2>
-          <motion.p 
+          <motion.p
             className="fluid-text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
@@ -378,7 +372,7 @@ export default function Pricing() {
         </motion.div>
 
         {/* Category Selector Tabs */}
-        <motion.div 
+        <motion.div
           className="mb-12"
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
@@ -395,20 +389,18 @@ export default function Pricing() {
                 whileTap={{ scale: 0.98 }}
               >
                 <Card
-                  className={`cursor-pointer transition-all duration-300 ${
-                    activeCategory === category.id
-                      ? 'glass-card ring-2 ring-brand-aqua shadow-lg border-brand-aqua/40'
-                      : 'glass-card border-brand-aqua/20 hover:border-brand-aqua/30 hover:shadow-md'
-                  }`}
+                  className={`cursor-pointer transition-all duration-300 ${activeCategory === category.id
+                    ? 'glass-card ring-2 ring-brand-aqua shadow-lg border-brand-aqua/40'
+                    : 'glass-card border-brand-aqua/20 hover:border-brand-aqua/30 hover:shadow-md'
+                    }`}
                   onClick={() => setActiveCategory(category.id)}
                   data-testid={`tab-${category.id}`}
                 >
                   <CardHeader className="text-center p-6">
-                    <CardTitle className={`fluid-text-xl font-bold mb-2 ${
-                      activeCategory === category.id 
-                        ? 'text-brand-teal' 
-                        : 'text-muted-foreground'
-                    }`}>
+                    <CardTitle className={`fluid-text-xl font-bold mb-2 ${activeCategory === category.id
+                      ? 'text-brand-teal'
+                      : 'text-muted-foreground'
+                      }`}>
                       {category.title}
                     </CardTitle>
                     <CardDescription className="fluid-text-sm leading-relaxed">
@@ -429,7 +421,7 @@ export default function Pricing() {
           transition={{ duration: 0.5 }}
         >
           {/* Category Heading */}
-          <motion.div 
+          <motion.div
             className="text-center mb-12"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -446,55 +438,28 @@ export default function Pricing() {
           </motion.div>
 
           {/* Package Content */}
-          {packageData.comingSoon ? (
-            <motion.div
-              className="text-center py-16"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Card className="glass-card border-brand-aqua/20 max-w-md mx-auto">
-                <CardContent className="p-8 text-center">
-                  <Bell className="w-16 h-16 text-brand-aqua mx-auto mb-6" />
-                  <h4 className="fluid-text-2xl font-bold text-brand-teal mb-4">
-                    Packages Coming Soon
-                  </h4>
-                  <p className="fluid-text-base text-muted-foreground mb-6">
-                    We're preparing specialized packages for senior professionals.
-                  </p>
-                  <Button 
-                    className="bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white"
-                    data-testid="button-get-notified"
-                  >
-                    Get Notified When Available
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto justify-items-center">
-              {packageData.packages?.map((pkg: any, index: number) => (
-                <PricingCard
-                  key={`${activeCategory}-${index}`}
-                  title={pkg.title}
-                  price={pkg.price}
-                  duration={pkg.duration}
-                  description={pkg.description}
-                  features={pkg.features}
-                  isPopular={pkg.isPopular}
-                  buttonText={pkg.buttonText}
-                  packageId={pkg.id}
-                  category={pkg.category}
-                  index={index}
-                  onPurchase={handlePurchase}
-                />
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto justify-items-center">
+            {packageData.packages?.map((pkg: any, index: number) => (
+              <PricingCard
+                key={`${activeCategory}-${index}`}
+                title={pkg.title}
+                price={pkg.price}
+                duration={pkg.duration}
+                description={pkg.description}
+                features={pkg.features}
+                isPopular={pkg.isPopular}
+                buttonText={pkg.buttonText}
+                packageId={pkg.id}
+                category={pkg.category}
+                index={index}
+                paymentButtonId={pkg.paymentButtonId}
+              />
+            ))}
+          </div>
         </motion.div>
 
         {/* Trust indicators */}
-        <motion.div 
+        <motion.div
           className="mt-20 text-center"
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
@@ -513,8 +478,8 @@ export default function Pricing() {
                 animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.5, delay: 1.2 + index * 0.1 }}
               >
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   className="glass-card border-brand-aqua/30 text-brand-teal hover:border-brand-aqua/50 transition-all duration-300 px-4 py-2"
                 >
                   {text}
@@ -522,7 +487,7 @@ export default function Pricing() {
               </motion.div>
             ))}
           </div>
-          <motion.p 
+          <motion.p
             className="fluid-text-sm text-muted-foreground"
             initial={{ opacity: 0 }}
             animate={inView ? { opacity: 1 } : { opacity: 0 }}
@@ -532,17 +497,8 @@ export default function Pricing() {
           </motion.p>
         </motion.div>
       </div>
-      
-      {/* Payment Contact Modal */}
-      {selectedPackage && (
-        <PaymentContactModal
-          isOpen={!!selectedPackage}
-          onClose={() => setSelectedPackage(null)}
-          packageId={selectedPackage.id}
-          packageName={selectedPackage.name}
-          packagePrice={selectedPackage.price}
-        />
-      )}
+
+      {/* Payment Contact Modal removed */}
     </section>
   );
 }

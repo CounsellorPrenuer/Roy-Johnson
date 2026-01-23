@@ -13,11 +13,11 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   const headers: Record<string, string> = {};
-  
+
   if (data) {
     headers["Content-Type"] = "application/json";
   }
-  
+
   // Add admin auth token for admin routes
   if (url.includes('/api/admin/')) {
     const adminToken = localStorage.getItem('admin_token');
@@ -42,30 +42,36 @@ export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    const url = queryKey.join("/") as string;
-    const headers: Record<string, string> = {};
-    
-    // Add admin auth token for admin routes
-    if (url.includes('/api/admin/')) {
-      const adminToken = localStorage.getItem('admin_token');
-      if (adminToken) {
-        headers["Authorization"] = `Bearer ${adminToken}`;
+    async ({ queryKey }) => {
+      const url = queryKey.join("/") as string;
+      const headers: Record<string, string> = {};
+
+      // Add admin auth token for admin routes
+      if (url.includes('/api/admin/')) {
+        const adminToken = localStorage.getItem('admin_token');
+        if (adminToken) {
+          headers["Authorization"] = `Bearer ${adminToken}`;
+        }
       }
-    }
 
-    const res = await fetch(url, {
-      headers,
-      credentials: "include",
-    });
+      // Mock API interception
+      if (url === '/api/packages') {
+        const { MOCK_PACKAGES } = await import('./mock_data');
+        return MOCK_PACKAGES;
+      }
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
+      const res = await fetch(url, {
+        headers,
+        credentials: "include",
+      });
 
-    await throwIfResNotOk(res);
-    return await res.json();
-  };
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
+
+      await throwIfResNotOk(res);
+      return await res.json();
+    };
 
 export const queryClient = new QueryClient({
   defaultOptions: {

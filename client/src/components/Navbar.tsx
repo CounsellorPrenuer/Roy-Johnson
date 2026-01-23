@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import DiscoveryCallModal from './DiscoveryCallModal';
-const logoPath = "/attached_assets/Career Plans Logo final_1759473980192.png";
+const logoPath = "attached_assets/career_plans_logo.png";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -29,11 +29,10 @@ export default function Navbar() {
 
   return (
     <motion.nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        isScrolled
-          ? 'glass-card border-b border-brand-aqua/20 shadow-lg'
-          : 'bg-transparent'
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled
+        ? 'glass-card border-b border-brand-aqua/20 shadow-lg'
+        : 'bg-transparent'
+        }`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
@@ -41,7 +40,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <motion.div 
+          <motion.div
             className="flex-shrink-0"
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}
@@ -85,7 +84,7 @@ export default function Navbar() {
           </div>
 
           {/* CTA Button */}
-          <motion.div 
+          <motion.div
             className="hidden md:block"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -150,14 +149,14 @@ export default function Navbar() {
         {/* Mobile menu */}
         <AnimatePresence>
           {isMobileMenuOpen && (
-            <motion.div 
+            <motion.div
               className="md:hidden"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <motion.div 
+              <motion.div
                 className="px-2 pt-2 pb-3 space-y-1 glass-card border border-brand-aqua/20 rounded-lg mt-2 shadow-xl"
                 initial={{ y: -20 }}
                 animate={{ y: 0 }}
@@ -182,7 +181,7 @@ export default function Navbar() {
                     {item.label}
                   </motion.button>
                 ))}
-                <motion.div 
+                <motion.div
                   className="px-3 py-2"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -204,11 +203,11 @@ export default function Navbar() {
           )}
         </AnimatePresence>
       </div>
-      
+
       {/* Discovery Call Modal */}
-      <DiscoveryCallModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <DiscoveryCallModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
       />
     </motion.nav>
   );

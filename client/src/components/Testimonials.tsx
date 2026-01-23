@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Quote, Star } from 'lucide-react';
+import { client, urlFor } from '@/lib/sanity';
 
 export default function Testimonials() {
   const { ref, inView } = useInView({
@@ -8,7 +10,26 @@ export default function Testimonials() {
     triggerOnce: true,
   });
 
-  const testimonials = [
+  const [sanityTestimonials, setSanityTestimonials] = useState<any[] | null>(null);
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const query = `*[_type == "testimonial"]`;
+        const result = await client.fetch(query);
+        setSanityTestimonials(result);
+      } catch (error) {
+        console.error("Failed to fetch testimonials:", error);
+        setSanityTestimonials([]);
+      }
+    };
+
+    fetchTestimonials();
+  }, []);
+
+  if (sanityTestimonials === null) return null;
+
+  const fallbackTestimonials = [
     {
       name: "Sarah Mitchell",
       role: "Senior Product Manager",
@@ -35,6 +56,15 @@ export default function Testimonials() {
     }
   ];
 
+  const displayTestimonials = sanityTestimonials.length > 0 ? sanityTestimonials.map((t: any) => ({
+    name: t.name,
+    role: t.role,
+    company: t.company,
+    content: t.content,
+    rating: t.rating || 5,
+    image: t.image ? urlFor(t.image).width(200).url() : null
+  })) : fallbackTestimonials;
+
   return (
     <section id="testimonials" className="py-16 md:py-24 bg-gradient-to-b from-background to-muted/20 relative overflow-hidden">
       {/* Background decoration */}
@@ -53,7 +83,7 @@ export default function Testimonials() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
-        <motion.div 
+        <motion.div
           ref={ref}
           className="text-center mb-12 md:mb-16"
           initial={{ opacity: 0, y: 30 }}
@@ -71,13 +101,13 @@ export default function Testimonials() {
               <span className="text-brand-teal font-semibold">Client Success Stories</span>
             </div>
           </motion.div>
-          
+
           <h2 className="fluid-text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-brand-teal to-brand-aqua bg-clip-text text-transparent">
               What Our Clients Say
             </span>
           </h2>
-          
+
           <p className="fluid-text-xl text-muted-foreground max-w-2xl mx-auto">
             Real stories from professionals who transformed their careers with strategic guidance
           </p>
@@ -85,24 +115,24 @@ export default function Testimonials() {
 
         {/* Testimonials Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {testimonials.map((testimonial, index) => (
+          {displayTestimonials.map((testimonial: any, index: number) => (
             <motion.div
               key={index}
               className="relative group"
               initial={{ opacity: 0, y: 50 }}
               animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-              transition={{ 
-                duration: 0.6, 
+              transition={{
+                duration: 0.6,
                 delay: 0.3 + index * 0.1,
                 ease: [0.25, 0.46, 0.45, 0.94]
               }}
               data-testid={`testimonial-card-${index}`}
             >
               {/* Animated gradient background */}
-              <motion.div 
+              <motion.div
                 className="absolute inset-0 bg-gradient-to-br from-brand-teal/20 via-brand-aqua/20 to-transparent rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
               />
-              
+
               <div className="relative glass-card p-6 md:p-8 rounded-2xl border border-brand-aqua/20 hover:border-brand-aqua/40 transition-all duration-300 h-full flex flex-col">
                 {/* Quote icon */}
                 <motion.div
@@ -120,9 +150,9 @@ export default function Testimonials() {
                       key={i}
                       initial={{ opacity: 0, scale: 0 }}
                       animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }}
-                      transition={{ 
-                        duration: 0.3, 
-                        delay: 0.5 + index * 0.1 + i * 0.05 
+                      transition={{
+                        duration: 0.3,
+                        delay: 0.5 + index * 0.1 + i * 0.05
                       }}
                     >
                       <Star className="w-5 h-5 text-yellow-400 fill-current" />
@@ -137,8 +167,12 @@ export default function Testimonials() {
 
                 {/* Author */}
                 <div className="flex items-center gap-3 pt-4 border-t border-brand-aqua/20">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-teal to-brand-aqua flex items-center justify-center text-white font-bold text-lg">
-                    {testimonial.name.charAt(0)}
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-teal to-brand-aqua flex items-center justify-center text-white font-bold text-lg overflow-hidden">
+                    {testimonial.image ? (
+                      <img src={testimonial.image} alt={testimonial.name} className="w-full h-full object-cover" />
+                    ) : (
+                      testimonial.name.charAt(0)
+                    )}
                   </div>
                   <div>
                     <div className="font-semibold text-foreground" data-testid={`text-testimonial-name-${index}`}>
@@ -158,7 +192,7 @@ export default function Testimonials() {
         </div>
 
         {/* Bottom CTA */}
-        <motion.div 
+        <motion.div
           className="text-center mt-12"
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}

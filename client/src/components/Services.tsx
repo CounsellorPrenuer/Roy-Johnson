@@ -1,8 +1,10 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Target, FileText, MessageSquare, ArrowRight, Users, TrendingUp, Award, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { client } from '@/lib/sanity';
 
 interface ServiceCardProps {
   icon: React.ReactNode;
@@ -11,6 +13,17 @@ interface ServiceCardProps {
   features: string[];
   index: number;
 }
+
+// Icon mapping
+const iconMap: { [key: string]: any } = {
+  Target,
+  FileText,
+  MessageSquare,
+  Users,
+  TrendingUp,
+  Award,
+  Briefcase
+};
 
 function ServiceCard({ icon, title, description, features, index }: ServiceCardProps) {
   const { ref, inView } = useInView({
@@ -23,12 +36,12 @@ function ServiceCard({ icon, title, description, features, index }: ServiceCardP
       ref={ref}
       initial={{ opacity: 0, y: 50 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-      transition={{ 
-        duration: 0.5, 
+      transition={{
+        duration: 0.5,
         delay: index * 0.15,
         ease: [0.25, 0.46, 0.45, 0.94]
       }}
-      whileHover={{ 
+      whileHover={{
         y: -10,
         transition: { duration: 0.2 }
       }}
@@ -38,9 +51,9 @@ function ServiceCard({ icon, title, description, features, index }: ServiceCardP
         <motion.div
           className="absolute inset-0 bg-gradient-to-br from-brand-teal/5 to-brand-aqua/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         />
-        
+
         <CardHeader className="pb-4 relative z-10">
-          <motion.div 
+          <motion.div
             className="mb-4 p-4 bg-gradient-to-br from-brand-teal/10 to-brand-aqua/10 rounded-2xl w-fit group-hover:from-brand-teal/20 group-hover:to-brand-aqua/20 transition-all duration-300 group-hover:scale-110"
             whileHover={{ rotate: 5 }}
           >
@@ -57,19 +70,19 @@ function ServiceCard({ icon, title, description, features, index }: ServiceCardP
         </CardHeader>
         <CardContent className="relative z-10">
           <ul className="space-y-3 mb-6">
-            {features.map((feature, featureIndex) => (
-              <motion.li 
-                key={featureIndex} 
+            {features?.map((feature, featureIndex) => (
+              <motion.li
+                key={featureIndex}
                 className="flex items-start gap-3 text-sm text-muted-foreground"
                 initial={{ opacity: 0, x: -20 }}
                 animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
-                transition={{ 
-                  duration: 0.3, 
+                transition={{
+                  duration: 0.3,
                   delay: index * 0.15 + featureIndex * 0.06 + 0.2,
                   ease: [0.25, 0.46, 0.45, 0.94]
                 }}
               >
-                <motion.div 
+                <motion.div
                   className="w-2 h-2 bg-brand-aqua rounded-full mt-1.5 flex-shrink-0"
                   whileHover={{ scale: 1.5 }}
                 />
@@ -81,7 +94,7 @@ function ServiceCard({ icon, title, description, features, index }: ServiceCardP
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Button 
+            <Button
               variant="outline"
               className="w-full glass-card border-brand-aqua/40 text-brand-teal hover:bg-brand-aqua/10 group/btn transition-all duration-300"
               onClick={() => {
@@ -96,8 +109,8 @@ function ServiceCard({ icon, title, description, features, index }: ServiceCardP
               <motion.div
                 className="ml-2"
                 animate={{ x: [0, 5, 0] }}
-                transition={{ 
-                  duration: 1.5, 
+                transition={{
+                  duration: 1.5,
                   repeat: Infinity,
                   ease: "easeInOut"
                 }}
@@ -118,7 +131,28 @@ export default function Services() {
     triggerOnce: true,
   });
 
-  const services = [
+  const [services, setServices] = useState<any[] | null>(null);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const query = `*[_type == "service"]`;
+        const result = await client.fetch(query);
+        const mappedResult = result.map((s: any) => ({
+          ...s,
+          icon: iconMap[s.icon] ? iconMap[s.icon] : <Target className="w-8 h-8" />
+        }));
+        setServices(mappedResult);
+      } catch (error) {
+        console.error("Failed to fetch services:", error);
+        setServices([]);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  const fallbackServices = [
     {
       icon: <Target className="w-8 h-8" />,
       title: 'Strategic Career Planning',
@@ -169,6 +203,17 @@ export default function Services() {
     }
   ];
 
+  // If loading (null), specific handling (e.g. return null or skeleton).
+  // Per instruction: "// Still loading -> render nothing (or skeleton)"
+  if (services === null) return null;
+
+  const displayServices = services.length > 0 ? services.map((s: any) => ({
+    icon: s.icon ? <s.icon className="w-8 h-8" /> : <Target className="w-8 h-8" />,
+    title: s.title,
+    description: s.description,
+    features: s.features || []
+  })) : fallbackServices;
+
   return (
     <section id="services" className="py-16 md:py-24 relative overflow-hidden">
       {/* Animated background */}
@@ -200,14 +245,14 @@ export default function Services() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <motion.div 
+        <motion.div
           ref={ref}
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          <motion.h2 
+          <motion.h2
             className="fluid-text-5xl font-bold text-brand-teal mb-6"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
@@ -215,7 +260,7 @@ export default function Services() {
           >
             How We Help You Succeed
           </motion.h2>
-          <motion.p 
+          <motion.p
             className="fluid-text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
@@ -226,7 +271,7 @@ export default function Services() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {services.map((service, index) => (
+          {displayServices.map((service, index) => (
             <ServiceCard
               key={index}
               icon={service.icon}

@@ -1,4 +1,24 @@
-import { Switch, Route } from "wouter";
+import { useState, useEffect } from "react";
+import { Switch, Route, Router as WouterRouter } from "wouter";
+
+// Custom hash location hook to ensure robust handling of GitHub Pages routing
+const useHashLocation = () => {
+  const getLocation = () => {
+    const hash = window.location.hash.replace(/^#/, "") || "/";
+    return hash.startsWith("/") ? hash : "/" + hash;
+  };
+
+  const [loc, setLoc] = useState(getLocation());
+
+  useEffect(() => {
+    const handler = () => setLoc(getLocation());
+    window.addEventListener("hashchange", handler);
+    return () => window.removeEventListener("hashchange", handler);
+  }, []);
+
+  const navigate = (to: string) => { window.location.hash = to; };
+  return [loc, navigate] as [string, (to: string) => void];
+};
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -41,38 +61,40 @@ function Home() {
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      
-      {/* Admin Routes */}
-      <Route path="/admin/login" component={AdminLogin} />
-      
-      <Route path="/admin">
-        <ProtectedAdminRoute>
-          <AdminLayout>
-            <AdminDashboard />
-          </AdminLayout>
-        </ProtectedAdminRoute>
-      </Route>
-      
-      <Route path="/admin/payments">
-        <ProtectedAdminRoute>
-          <AdminLayout>
-            <PaymentManagement />
-          </AdminLayout>
-        </ProtectedAdminRoute>
-      </Route>
-      
-      <Route path="/admin/contacts">
-        <ProtectedAdminRoute>
-          <AdminLayout>
-            <ContactManagement />
-          </AdminLayout>
-        </ProtectedAdminRoute>
-      </Route>
-      
-      <Route component={NotFound} />
-    </Switch>
+    <WouterRouter hook={useHashLocation}>
+      <Switch>
+        <Route path="/" component={Home} />
+
+        {/* Admin Routes */}
+        <Route path="/admin/login" component={AdminLogin} />
+
+        <Route path="/admin">
+          <ProtectedAdminRoute>
+            <AdminLayout>
+              <AdminDashboard />
+            </AdminLayout>
+          </ProtectedAdminRoute>
+        </Route>
+
+        <Route path="/admin/payments">
+          <ProtectedAdminRoute>
+            <AdminLayout>
+              <PaymentManagement />
+            </AdminLayout>
+          </ProtectedAdminRoute>
+        </Route>
+
+        <Route path="/admin/contacts">
+          <ProtectedAdminRoute>
+            <AdminLayout>
+              <ContactManagement />
+            </AdminLayout>
+          </ProtectedAdminRoute>
+        </Route>
+
+        <Route component={NotFound} />
+      </Switch>
+    </WouterRouter>
   );
 }
 

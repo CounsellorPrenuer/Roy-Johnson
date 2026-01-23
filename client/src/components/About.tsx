@@ -4,8 +4,8 @@ import { Award, Users, TrendingUp, Star } from 'lucide-react';
 
 export default function About() {
   // TODO: Fix image import path after build setup
-  const profilePath = "/attached_assets/profile_1759131412191.JPG";
-  
+  const profilePath = "attached_assets/profile_1759131412191.JPG";
+
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
@@ -17,7 +17,7 @@ export default function About() {
     { icon: <TrendingUp className="w-5 h-5" />, label: "Avg. Salary Increase", value: "45%" },
     { icon: <Star className="w-5 h-5" />, label: "Client Rating", value: "4.9/5" }
   ];
-  
+
   return (
     <section id="about" className="py-16 md:py-24 bg-background relative overflow-hidden">
       {/* Background decoration */}
@@ -33,11 +33,11 @@ export default function About() {
           ease: "easeInOut"
         }}
       />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Profile Image */}
-          <motion.div 
+          <motion.div
             ref={ref}
             className="order-2 lg:order-1 flex justify-center lg:justify-start"
             initial={{ opacity: 0, x: -50 }}
@@ -46,7 +46,7 @@ export default function About() {
           >
             <div className="relative group">
               {/* Animated background glow */}
-              <motion.div 
+              <motion.div
                 className="absolute inset-0 bg-gradient-to-br from-brand-teal/30 to-brand-aqua/30 rounded-2xl blur-xl"
                 animate={{
                   rotate: [0, 6, -6, 0],
@@ -58,7 +58,7 @@ export default function About() {
                   ease: "easeInOut"
                 }}
               />
-              
+
               {/* Floating particles around image */}
               {[...Array(6)].map((_, i) => (
                 <motion.div
@@ -81,7 +81,7 @@ export default function About() {
                   }}
                 />
               ))}
-              
+
               <motion.img
                 src={profilePath}
                 alt="Roy Johnson - Career Coach"
@@ -90,7 +90,7 @@ export default function About() {
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.3 }}
               />
-              
+
               {/* Gradient overlay on hover */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-t from-brand-teal/20 via-transparent to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
@@ -99,13 +99,13 @@ export default function About() {
           </motion.div>
 
           {/* Content */}
-          <motion.div 
+          <motion.div
             className="order-1 lg:order-2"
             initial={{ opacity: 0, x: 50 }}
             animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
             transition={{ duration: 0.5, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <motion.div 
+            <motion.div
               className="mb-8"
               initial={{ opacity: 0, y: 20 }}
               animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
@@ -114,7 +114,7 @@ export default function About() {
               <h2 className="fluid-text-5xl font-bold text-brand-teal mb-4">
                 Meet <motion.span
                   className="bg-gradient-to-r from-brand-teal to-brand-aqua bg-clip-text text-transparent"
-                  animate={{ 
+                  animate={{
                     backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
                   }}
                   transition={{
@@ -126,7 +126,7 @@ export default function About() {
                   Roy Johnson
                 </motion.span>
               </h2>
-              <motion.p 
+              <motion.p
                 className="fluid-text-xl text-brand-aqua font-medium"
                 initial={{ opacity: 0 }}
                 animate={inView ? { opacity: 1 } : { opacity: 0 }}
@@ -136,7 +136,7 @@ export default function About() {
               </motion.p>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="space-y-6 fluid-text-lg text-muted-foreground leading-relaxed mb-8"
               initial={{ opacity: 0 }}
               animate={inView ? { opacity: 1 } : { opacity: 0 }}
@@ -147,35 +147,35 @@ export default function About() {
                 animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                 transition={{ duration: 0.3, delay: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
-                With over 15 years of experience in talent development and professional coaching, 
-                Roy Johnson founded Career Plans with a single mission: to empower individuals to 
-                take control of their professional lives. He believes that a fulfilling career is 
+                With over 15 years of experience in talent development and professional coaching,
+                Roy Johnson founded Career Plans with a single mission: to empower individuals to
+                take control of their professional lives. He believes that a fulfilling career is
                 not found by chance, but built by design.
               </motion.p>
-              
+
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                 transition={{ duration: 0.3, delay: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
-                Roy's approach combines deep industry insight with personalized, data-driven strategies. 
-                He specializes in helping professionals at all levels—from recent graduates to seasoned 
-                executives—navigate the complexities of the modern job market, build on their strengths, 
+                Roy's approach combines deep industry insight with personalized, data-driven strategies.
+                He specializes in helping professionals at all levels—from recent graduates to seasoned
+                executives—navigate the complexities of the modern job market, build on their strengths,
                 and create actionable plans for success.
               </motion.p>
-              
+
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                 transition={{ duration: 0.3, delay: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
-                Whether you're seeking a promotion, changing industries, or just starting your career, 
+                Whether you're seeking a promotion, changing industries, or just starting your career,
                 Roy is the dedicated partner you need to turn your career ambitions into reality.
               </motion.p>
             </motion.div>
 
             {/* Achievement Cards */}
-            <motion.div 
+            <motion.div
               className="grid grid-cols-2 gap-4 mb-8"
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
@@ -206,20 +206,20 @@ export default function About() {
             </motion.div>
 
             {/* Credentials/Highlights */}
-            <motion.div 
+            <motion.div
               className="grid grid-cols-1 sm:grid-cols-2 gap-4"
               initial={{ opacity: 0, y: 30 }}
               animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
               transition={{ duration: 0.8, delay: 2 }}
             >
-              <motion.div 
+              <motion.div
                 className="glass-card rounded-lg p-6 border border-brand-aqua/20 hover:border-brand-aqua/40 transition-all duration-300 hover:shadow-lg group"
                 whileHover={{ scale: 1.02 }}
               >
                 <div className="font-bold text-brand-teal fluid-text-sm mb-2 group-hover:text-brand-aqua transition-colors duration-300">Specialization</div>
                 <div className="fluid-text-xs text-muted-foreground">Career Transitions & Leadership Development</div>
               </motion.div>
-              <motion.div 
+              <motion.div
                 className="glass-card rounded-lg p-6 border border-brand-aqua/20 hover:border-brand-aqua/40 transition-all duration-300 hover:shadow-lg group"
                 whileHover={{ scale: 1.02 }}
               >
