@@ -18,7 +18,7 @@ export default function Contact() {
     message: ''
   });
   const { toast } = useToast();
-  
+
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
@@ -26,13 +26,31 @@ export default function Contact() {
 
   const contactMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const response = await apiRequest('POST', '/api/contact', data);
+      const workerUrl = import.meta.env.VITE_API_BASE_URL || "https://careerplans-worker.garyphadale.workers.dev";
+      if (!workerUrl) throw new Error("API URL not configured");
+
+      const response = await fetch(`${workerUrl}/submit-lead`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          source: 'contact'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit');
+      }
+
       return response.json();
     },
     onSuccess: () => {
       toast({
         title: "Message sent successfully!",
         description: "Thank you for your inquiry. Roy will get back to you within 24 hours.",
+        className: "bg-green-600 text-white border-none"
       });
       setFormData({ name: '', email: '', phone: '', message: '' });
     },
@@ -48,7 +66,7 @@ export default function Contact() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
     if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
       toast({
@@ -97,7 +115,7 @@ export default function Contact() {
       description: 'Follow our journey'
     }
   ];
-  
+
   const additionalInfo = [
     {
       icon: <MapPin className="w-5 h-5" />,
@@ -127,16 +145,16 @@ export default function Contact() {
           ease: "easeInOut"
         }}
       />
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <motion.div 
+        <motion.div
           ref={ref}
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          <motion.h2 
+          <motion.h2
             className="fluid-text-5xl font-bold mb-6"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
@@ -146,7 +164,7 @@ export default function Contact() {
               Let's Start Your Journey
             </span>
           </motion.h2>
-          <motion.p 
+          <motion.p
             className="fluid-text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
@@ -279,7 +297,7 @@ export default function Contact() {
           </motion.div>
 
           {/* Contact Information */}
-          <motion.div 
+          <motion.div
             className="space-y-8"
             initial={{ opacity: 0, x: 50 }}
             animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
@@ -304,7 +322,7 @@ export default function Contact() {
                   <p className="text-white/90 leading-relaxed fluid-text-base">
                     Ready to transform your career? Reach out today and let's discuss your professional goals and how Career Plans can help you achieve them.
                   </p>
-                  
+
                   <div className="mt-6 grid grid-cols-2 gap-4">
                     {additionalInfo.map((info, index) => (
                       <div key={index} className="flex items-center gap-2">
@@ -335,7 +353,7 @@ export default function Contact() {
                   whileHover={{ y: -5, scale: 1.02 }}
                 >
                   <div className="flex items-start gap-4">
-                    <motion.div 
+                    <motion.div
                       className="text-brand-teal group-hover:text-brand-aqua transition-colors duration-300 p-2 bg-brand-teal/10 rounded-lg group-hover:bg-brand-aqua/10"
                       whileHover={{ rotate: 5 }}
                     >

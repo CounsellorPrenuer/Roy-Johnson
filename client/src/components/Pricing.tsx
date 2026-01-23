@@ -4,20 +4,21 @@ import { useInView } from 'react-intersection-observer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star, Sparkles, Bell } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Check, Star, Sparkles, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { loadRazorpayScript } from '@/lib/razorpay';
-import { RazorpayButton } from './RazorpayButton';
 import type { CoachingPackage } from '@shared/schema';
 
-// Extended type to include paymentButtonId since we added it to mock data
+// Extended type 
 interface ExtendedCoachingPackage extends CoachingPackage {
-  paymentButtonId?: string;
+  rawPrice?: number;
 }
 
 interface PricingCardProps {
   title: string;
   price: string;
+  rawPrice?: number;
+  planId: string;
   duration: string;
   description: string;
   features: string[];
@@ -26,14 +27,80 @@ interface PricingCardProps {
   index: number;
   packageId: string;
   category: string;
-  paymentButtonId?: string;
 }
 
-function PricingCard({ title, price, duration, description, features, isPopular, buttonText, index, packageId, category, paymentButtonId }: PricingCardProps) {
+function PricingCard({ title, price, rawPrice, planId, duration, description, features, isPopular, buttonText, index, packageId, category }: PricingCardProps) {
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
   });
+
+  const { toast } = useToast();
+  const [couponCode, setCouponCode] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handlePayment = async () => {
+    if (!planId) return;
+
+    setIsProcessing(true);
+    try {
+      const workerUrl = import.meta.env.VITE_API_BASE_URL;
+      if (!workerUrl) throw new Error("API URL not configured");
+
+      // 1. Create Order on Server
+      const res = await fetch(`${workerUrl}/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId,
+          currency: "INR",
+          couponCode: couponCode || null
+        })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to initialize payment");
+      }
+
+      const data = await res.json();
+
+      // 2. Open Razorpay
+      const options = {
+        key: data.key_id,
+        amount: data.amount * 100, // Razorpay uses paise
+        currency: data.currency,
+        name: "Career Plans",
+        description: `Payment for ${title}`,
+        order_id: data.order_id,
+        handler: function (response: any) {
+          toast({
+            title: "Payment Successful!",
+            description: `Payment ID: ${response.razorpay_payment_id}. You will receive a confirmation email shortly.`,
+            variant: "default",
+            className: "bg-green-600 text-white border-none"
+          });
+          setCouponCode("");
+        },
+        theme: {
+          color: "#0F766E"
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+    } catch (error) {
+      console.error("Payment Error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to process payment. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <motion.div
@@ -51,7 +118,7 @@ function PricingCard({ title, price, duration, description, features, isPopular,
       }}
       className={`relative ${isPopular ? 'scale-110 z-10' : ''}`}
     >
-      <Card className={`relative overflow-hidden transition-all duration-500 hover:shadow-2xl h-full ${isPopular
+      <Card className={`relative overflow-hidden transition-all duration-500 hover:shadow-2xl h-full flex flex-col ${isPopular
         ? 'glass-card ring-2 ring-brand-aqua shadow-xl'
         : 'glass-card border-brand-aqua/20 hover:border-brand-aqua/40'
         }`}>
@@ -128,7 +195,7 @@ function PricingCard({ title, price, duration, description, features, isPopular,
           </motion.div>
         </CardHeader>
 
-        <CardContent className="pt-0 relative z-10">
+        <CardContent className="pt-0 relative z-10 flex-grow">
           <ul className="space-y-4 mb-8">
             {features.map((feature, featureIndex) => (
               <motion.li
@@ -153,11 +220,36 @@ function PricingCard({ title, price, duration, description, features, isPopular,
             ))}
           </ul>
 
-          <div className="w-full flex justify-center min-h-[50px]">
-            {paymentButtonId ? (
-              <RazorpayButton paymentButtonId={paymentButtonId} />
+          <div className="w-full flex-col space-y-3 mt-auto">
+            {rawPrice ? (
+              <>
+                <Input
+                  placeholder="Coupon Code (Optional)"
+                  value={couponCode}
+                  onChange={(e: any) => setCouponCode(e.target.value)}
+                  disabled={isProcessing}
+                  className="text-center border-brand-teal/20 focus-visible:ring-brand-teal"
+                />
+                <Button
+                  className="w-full bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                  onClick={handlePayment}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    buttonText
+                  )}
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  Secure payment via Razorpay
+                </p>
+              </>
             ) : (
-              <div className="text-brand-teal font-medium">Contact for Pricing</div>
+              <Button className="w-full" variant="outline">Contact for Pricing</Button>
             )}
           </div>
         </CardContent>
@@ -169,16 +261,6 @@ function PricingCard({ title, price, duration, description, features, isPopular,
 
 import { client } from '@/lib/sanity';
 import { MOCK_PACKAGES } from '@/lib/mock_data';
-
-// Static map of ID and payment button IDs to ensure secure payments logic remains static
-const PACKAGE_CONFIG: { [key: string]: { id: string; paymentButtonId: string } } = {
-  'discover': { id: 'pkg_1', paymentButtonId: 'pl_RwDuOx96VYrsyN' },
-  'discovery_plus': { id: 'pkg_2', paymentButtonId: 'pl_RwDq8XpK76OhB3' },
-  'achieve': { id: 'pkg_3', paymentButtonId: 'pl_RwDxvLPQP7j4rG' },
-  'achieve_plus': { id: 'pkg_4', paymentButtonId: 'pl_RwDzfVkQYEdAIf' },
-  'ascend': { id: 'pkg_5', paymentButtonId: 'pl_RwE1evNHrHWJDW' },
-  'ascend_plus': { id: 'pkg_6', paymentButtonId: 'pl_RwE3WEILWB9WeJ' }
-};
 
 export default function Pricing() {
   const { ref, inView } = useInView({
@@ -228,7 +310,6 @@ export default function Pricing() {
 
 
   // Transform API packages to match component structure
-  // Transform API packages to match component structure
   const getPackageData = () => {
     const getCategoryInfo = (cat: string) => {
       switch (cat) {
@@ -260,23 +341,18 @@ export default function Pricing() {
       packagesToDisplay = sanityPackages
         .filter((pkg: any) => pkg.category === activeCategory)
         .map((pkg: any) => {
-          const config = PACKAGE_CONFIG[pkg.packageType];
-          // Determine ID securely
-          const id = config ? config.id : `sanity-${pkg._id}`;
-          // Determine button ID securely
-          const paymentButtonId = config ? config.paymentButtonId : undefined;
-
           return {
-            id,
+            id: pkg._id,
             title: pkg.title,
-            price: pkg.price ? `₹${pkg.price}` : 'Contact for Price',
+            price: pkg.price ? `₹${pkg.price.toLocaleString('en-IN')}` : 'Contact for Price',
+            rawPrice: pkg.price,
+            planId: pkg.packageType,
             duration: 'package',
             description: pkg.description || info.desc,
             features: pkg.features || [],
             isPopular: pkg.isPopular,
-            buttonText: config ? `Choose ${pkg.title}` : 'Contact Us',
-            category: pkg.category,
-            paymentButtonId
+            buttonText: pkg.price ? `Choose ${pkg.title}` : 'Contact Us',
+            category: pkg.category
           };
         });
     } else {
@@ -287,13 +363,14 @@ export default function Pricing() {
           id: pkg.id,
           title: pkg.name,
           price: `₹${parseFloat(pkg.price).toLocaleString('en-IN')}`,
+          rawPrice: parseFloat(pkg.price),
+          planId: pkg.packageType,
           duration: 'package',
           description: info.desc,
           features: pkg.features,
           isPopular: pkg.packageType === 'ascend_plus',
           buttonText: `Choose ${pkg.name}`,
-          category: pkg.category,
-          paymentButtonId: pkg.paymentButtonId
+          category: pkg.category
         }));
     }
 
@@ -444,6 +521,8 @@ export default function Pricing() {
                 key={`${activeCategory}-${index}`}
                 title={pkg.title}
                 price={pkg.price}
+                rawPrice={pkg.rawPrice}
+                planId={pkg.planId}
                 duration={pkg.duration}
                 description={pkg.description}
                 features={pkg.features}
@@ -452,7 +531,6 @@ export default function Pricing() {
                 packageId={pkg.id}
                 category={pkg.category}
                 index={index}
-                paymentButtonId={pkg.paymentButtonId}
               />
             ))}
           </div>
