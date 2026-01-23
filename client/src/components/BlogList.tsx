@@ -27,7 +27,8 @@ export default function BlogList() {
           slug,
           mainImage,
           publishedAt,
-          excerpt
+          excerpt,
+          "contentPreview": body[0].children[0].text
         }`;
                 const result = await client.fetch(query);
                 setPosts(result);
@@ -103,13 +104,34 @@ export default function BlogList() {
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="flex-grow">
-                                    <p className="text-muted-foreground line-clamp-3">
-                                        {post.excerpt || "Read more about this topic..."}
-                                    </p>
+                                    <div className="relative">
+                                        {/* Static preview (always visible on mobile, enhanced on desktop hover) */}
+                                        <p className="text-muted-foreground line-clamp-3 transition-opacity duration-300 group-hover:opacity-80">
+                                            {(() => {
+                                                // Use excerpt if available, otherwise generate from content
+                                                const preview = post.excerpt ||
+                                                    (post.contentPreview ?
+                                                        post.contentPreview.substring(0, 150) :
+                                                        "Click to read more about this topic...");
+
+                                                // Ensure it ends nicely
+                                                return preview.length > 150
+                                                    ? preview.substring(0, 147) + "..."
+                                                    : preview;
+                                            })()}
+                                        </p>
+
+                                        {/* Enhanced hover preview for desktop */}
+                                        <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-background/95 via-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                            <p className="text-sm text-foreground/90 line-clamp-4 p-2 pt-4">
+                                                {post.excerpt || (post.contentPreview ? post.contentPreview.substring(0, 200) : "")}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </CardContent>
                                 <CardFooter>
                                     <Link href={`/blog/${post.slug.current}`}>
-                                        <Button variant="link" className="p-0 text-brand-teal font-semibold group-hover:translate-x-1 transition-transform">
+                                        <Button variant="ghost" className="p-0 text-brand-teal font-semibold group-hover:translate-x-1 transition-transform">
                                             Read Article <ArrowRight className="w-4 h-4 ml-1" />
                                         </Button>
                                     </Link>
