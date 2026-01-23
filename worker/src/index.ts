@@ -138,9 +138,6 @@ export default {
                 const requestBody = await request.json() as any;
                 const { planId, currency, couponCode } = requestBody;
 
-                // Log incoming request
-                console.log("[CREATE-ORDER] Incoming request:", JSON.stringify({ planId, currency, couponCode }));
-
                 const PRICING_CONFIG: Record<string, number> = {
                     "discover": 5500,
                     "discovery_plus": 15000,
@@ -151,23 +148,20 @@ export default {
                 };
 
                 const basePrice = PRICING_CONFIG[planId];
-                console.log(`[CREATE-ORDER] planId: ${planId}, basePrice: ${basePrice}`);
 
                 if (!basePrice) {
                     console.error(`[CREATE-ORDER] Invalid planId: ${planId}`);
-                    return new Response(JSON.stringify({ error: `Invalid planId: ${planId}. Valid plans: ${Object.keys(PRICING_CONFIG).join(', ')}` }), { status: 400, headers: corsHeaders });
+                    return new Response(JSON.stringify({ error: `Invalid planId: ${planId}.` }), { status: 400, headers: corsHeaders });
                 }
 
                 let finalAmount = Number(basePrice);
                 let appliedCoupon = null;
 
                 if (couponCode) {
-                    console.log(`[CREATE-ORDER] Validating coupon: ${couponCode}`);
                     const validation = await validateCoupon(env, couponCode, finalAmount);
                     if (validation.valid && validation.final_amount !== undefined) {
                         finalAmount = Number(validation.final_amount);
                         appliedCoupon = validation.code;
-                        console.log(`[CREATE-ORDER] Coupon applied. Final amount: ${finalAmount}`);
                     }
                 }
 
@@ -181,7 +175,6 @@ export default {
                         plan_id: planId
                     }
                 };
-                console.log("[CREATE-ORDER] Razorpay payload:", JSON.stringify(razorpayPayload));
 
                 const razorpayRes = await fetch("https://api.razorpay.com/v1/orders", {
                     method: "POST",
@@ -195,7 +188,6 @@ export default {
                     return new Response(JSON.stringify({ error: `Razorpay API error: ${errorText}` }), { status: 500, headers: corsHeaders });
                 }
                 const orderData: any = await razorpayRes.json();
-                console.log("[CREATE-ORDER] Razorpay order created:", orderData.id);
 
                 await env.DB.prepare(
                     "INSERT INTO transactions (id, order_id, amount, status, created_at) VALUES (?, ?, ?, ?, ?)"
@@ -203,7 +195,6 @@ export default {
                     crypto.randomUUID(), orderData.id, finalAmount, "created", Math.floor(Date.now() / 1000)
                 ).run();
 
-                console.log("[CREATE-ORDER] Success - returning order data");
                 return new Response(JSON.stringify({
                     order_id: orderData.id,
                     amount: finalAmount,

@@ -47,8 +47,6 @@ function PricingCard({ title, price, rawPrice, planId, duration, description, fe
       const workerUrl = import.meta.env.VITE_API_BASE_URL || "https://careerplans-worker.garyphadale.workers.dev";
       if (!workerUrl) throw new Error("API URL not configured");
 
-      console.log(`[PAYMENT] Creating order for planId: ${planId}`);
-
       // 1. Create Order on Server
       const res = await fetch(`${workerUrl}/create-order`, {
         method: 'POST',
@@ -60,16 +58,13 @@ function PricingCard({ title, price, rawPrice, planId, duration, description, fe
         })
       });
 
-      console.log(`[PAYMENT] Backend response status: ${res.status}`);
-
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        console.error("[PAYMENT] Backend error response:", errorData);
+        console.error("[PAYMENT] Backend error:", errorData);
         throw new Error(errorData.error || `Server error: ${res.status}`);
       }
 
       const data = await res.json();
-      console.log("[PAYMENT] Order created successfully:", data);
 
       // 2. Open Razorpay
       const options = {
