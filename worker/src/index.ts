@@ -135,7 +135,11 @@ export default {
                     return new Response(JSON.stringify({ error: "Server Configuration Error" }), { status: 500, headers: corsHeaders });
                 }
 
-                const { planId, currency, couponCode } = await request.json() as any;
+                const requestBody = await request.json() as any;
+                const { planId, currency, couponCode } = requestBody;
+
+                // Log incoming request
+                console.log("[CREATE-ORDER] Incoming request:", JSON.stringify({ planId, currency, couponCode }));
 
                 const PRICING_CONFIG: Record<string, number> = {
                     "discover": 5500,
@@ -147,39 +151,51 @@ export default {
                 };
 
                 const basePrice = PRICING_CONFIG[planId];
+                console.log(`[CREATE-ORDER] planId: ${planId}, basePrice: ${basePrice}`);
 
                 if (!basePrice) {
-                    return new Response(JSON.stringify({ error: "Invalid or missing Plan ID" }), { status: 400, headers: corsHeaders });
+                    console.error(`[CREATE-ORDER] Invalid planId: ${planId}`);
+                    return new Response(JSON.stringify({ error: `Invalid planId: ${planId}. Valid plans: ${Object.keys(PRICING_CONFIG).join(', ')}` }), { status: 400, headers: corsHeaders });
                 }
 
                 let finalAmount = Number(basePrice);
                 let appliedCoupon = null;
 
                 if (couponCode) {
+                    console.log(`[CREATE-ORDER] Validating coupon: ${couponCode}`);
                     const validation = await validateCoupon(env, couponCode, finalAmount);
                     if (validation.valid && validation.final_amount !== undefined) {
                         finalAmount = Number(validation.final_amount);
                         appliedCoupon = validation.code;
+                        console.log(`[CREATE-ORDER] Coupon applied. Final amount: ${finalAmount}`);
                     }
                 }
 
                 const credentials = btoa(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`);
+                const razorpayPayload = {
+                    amount: Math.round(finalAmount * 100),
+                    currency: currency || "INR",
+                    receipt: `txn_${Date.now()}`,
+                    notes: {
+                        coupon_code: appliedCoupon || "",
+                        plan_id: planId
+                    }
+                };
+                console.log("[CREATE-ORDER] Razorpay payload:", JSON.stringify(razorpayPayload));
+
                 const razorpayRes = await fetch("https://api.razorpay.com/v1/orders", {
                     method: "POST",
                     headers: { "Authorization": `Basic ${credentials}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        amount: Math.round(finalAmount * 100),
-                        currency: currency || "INR",
-                        receipt: `txn_${Date.now()}`,
-                        notes: {
-                            coupon_code: appliedCoupon || "",
-                            plan_id: planId
-                        }
-                    })
+                    body: JSON.stringify(razorpayPayload)
                 });
 
-                if (!razorpayRes.ok) throw new Error(await razorpayRes.text());
+                if (!razorpayRes.ok) {
+                    const errorText = await razorpayRes.text();
+                    console.error(`[CREATE-ORDER] Razorpay error: ${razorpayRes.status} - ${errorText}`);
+                    return new Response(JSON.stringify({ error: `Razorpay API error: ${errorText}` }), { status: 500, headers: corsHeaders });
+                }
                 const orderData: any = await razorpayRes.json();
+                console.log("[CREATE-ORDER] Razorpay order created:", orderData.id);
 
                 await env.DB.prepare(
                     "INSERT INTO transactions (id, order_id, amount, status, created_at) VALUES (?, ?, ?, ?, ?)"
@@ -187,6 +203,7 @@ export default {
                     crypto.randomUUID(), orderData.id, finalAmount, "created", Math.floor(Date.now() / 1000)
                 ).run();
 
+                console.log("[CREATE-ORDER] Success - returning order data");
                 return new Response(JSON.stringify({
                     order_id: orderData.id,
                     amount: finalAmount,
@@ -196,8 +213,9 @@ export default {
                 }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
 
             } catch (error) {
-                console.error("Create Order Error:", error);
-                return new Response(JSON.stringify({ error: "Order Creation Failed" }), { status: 500, headers: corsHeaders });
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                console.error("[CREATE-ORDER] Caught error:", errorMessage, error);
+                return new Response(JSON.stringify({ error: `Order Creation Failed: ${errorMessage}` }), { status: 500, headers: corsHeaders });
             }
         }
 

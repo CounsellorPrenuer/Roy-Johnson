@@ -44,8 +44,10 @@ function PricingCard({ title, price, rawPrice, planId, duration, description, fe
 
     setIsProcessing(true);
     try {
-      const workerUrl = import.meta.env.VITE_API_BASE_URL;
+      const workerUrl = import.meta.env.VITE_API_BASE_URL || "https://careerplans-worker.garyphadale.workers.dev";
       if (!workerUrl) throw new Error("API URL not configured");
+
+      console.log(`[PAYMENT] Creating order for planId: ${planId}`);
 
       // 1. Create Order on Server
       const res = await fetch(`${workerUrl}/create-order`, {
@@ -58,12 +60,16 @@ function PricingCard({ title, price, rawPrice, planId, duration, description, fe
         })
       });
 
+      console.log(`[PAYMENT] Backend response status: ${res.status}`);
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to initialize payment");
+        console.error("[PAYMENT] Backend error response:", errorData);
+        throw new Error(errorData.error || `Server error: ${res.status}`);
       }
 
       const data = await res.json();
+      console.log("[PAYMENT] Order created successfully:", data);
 
       // 2. Open Razorpay
       const options = {
@@ -91,10 +97,11 @@ function PricingCard({ title, price, rawPrice, planId, duration, description, fe
       rzp.open();
 
     } catch (error) {
-      console.error("Payment Error:", error);
+      console.error("[PAYMENT] Caught error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to process payment";
       toast({
-        title: "Error",
-        description: "Failed to process payment. Please try again.",
+        title: "Payment Error",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
