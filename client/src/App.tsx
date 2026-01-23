@@ -43,6 +43,9 @@ import ContactManagement from "@/pages/admin/ContactManagement";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ProtectedAdminRoute from "@/components/admin/ProtectedAdminRoute";
 
+import BlogList from "@/components/BlogList";
+import BlogPost from "@/components/BlogPost";
+
 function Home() {
   return (
     <div className="min-h-screen bg-background">
@@ -59,11 +62,37 @@ function Home() {
   );
 }
 
+function BlogPage() {
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="pt-16">
+        <BlogList />
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+function BlogPostPage() {
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="pt-16">
+        <BlogPost />
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
 function Router() {
   return (
     <WouterRouter hook={useHashLocation}>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/blog" component={BlogPage} />
+        <Route path="/blog/:slug" component={BlogPostPage} />
 
         {/* Admin Routes */}
         <Route path="/admin/login" component={AdminLogin} />
