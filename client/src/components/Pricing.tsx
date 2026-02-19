@@ -5,14 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Check, Star, Sparkles, Loader2 } from 'lucide-react';
+import { Check, Star, Sparkles, Loader2, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { CoachingPackage } from '@shared/schema';
-
-// Extended type 
-interface ExtendedCoachingPackage extends CoachingPackage {
-  rawPrice?: number;
-}
+import { client } from '@/lib/sanity';
+import { MOCK_PACKAGES } from '@/lib/mock_data';
 
 interface PricingCardProps {
   title: string;
@@ -27,9 +23,10 @@ interface PricingCardProps {
   index: number;
   packageId: string;
   category: string;
+  section: 'standard' | 'custom';
 }
 
-function PricingCard({ title, price, rawPrice, planId, duration, description, features, isPopular, buttonText, index, packageId, category }: PricingCardProps) {
+function PricingCard({ title, price, rawPrice, planId, duration, description, features, isPopular, buttonText, index, section }: PricingCardProps) {
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
@@ -223,7 +220,17 @@ function PricingCard({ title, price, rawPrice, planId, duration, description, fe
           </ul>
 
           <div className="w-full flex-col space-y-3 mt-auto">
-            {rawPrice ? (
+            {section === 'custom' ? (
+              <Button
+                className="w-full bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                onClick={() => {
+                  // Scroll to contact form or open mailto
+                  document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                {buttonText} <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            ) : rawPrice ? (
               <>
                 <Input
                   placeholder="Coupon Code (Optional)"
@@ -260,10 +267,6 @@ function PricingCard({ title, price, rawPrice, planId, duration, description, fe
   );
 }
 
-
-import { client } from '@/lib/sanity';
-import { MOCK_PACKAGES } from '@/lib/mock_data';
-
 export default function Pricing() {
   const { ref, inView } = useInView({
     threshold: 0.1,
@@ -271,10 +274,6 @@ export default function Pricing() {
   });
 
   const [activeCategory, setActiveCategory] = useState<'freshers' | 'middle-management' | 'senior-professionals'>('freshers');
-  const { toast } = useToast();
-
-  // Fetch packages from Sanity
-  // NOTE: We fetch TEXT content from Sanity, but logic comes from static map
   const [sanityPackages, setSanityPackages] = useState<any[] | null>(null);
 
   useEffect(() => {
@@ -310,26 +309,24 @@ export default function Pricing() {
     }
   ];
 
-
-  // Transform API packages to match component structure
   const getPackageData = () => {
     const getCategoryInfo = (cat: string) => {
       switch (cat) {
         case 'senior-professionals':
           return {
-            title: 'Packages for Senior Professionals',
+            title: 'Standard Packages for Senior Professionals',
             subtitle: 'Executive transformation & C-suite positioning',
             desc: 'For Senior Executives'
           };
         case 'middle-management':
           return {
-            title: 'Packages for Middle Management',
+            title: 'Standard Packages for Middle Management',
             subtitle: 'Leadership development & strategic advancement',
             desc: 'For Working Professionals'
           };
         default:
           return {
-            title: 'Packages for Freshers',
+            title: 'Standard Packages for Freshers',
             subtitle: 'Strategic career foundation & professional readiness',
             desc: 'For College Graduates'
           };
@@ -337,29 +334,48 @@ export default function Pricing() {
     };
 
     const info = getCategoryInfo(activeCategory);
-    let packagesToDisplay = [];
+    let standardPackages = [];
+    let customPackages = [];
 
     if (sanityPackages && sanityPackages.length > 0) {
-      packagesToDisplay = sanityPackages
-        .filter((pkg: any) => pkg.category === activeCategory)
-        .map((pkg: any) => {
-          return {
-            id: pkg._id,
-            title: pkg.title,
-            price: pkg.price ? `₹${pkg.price.toLocaleString('en-IN')}` : 'Contact for Price',
-            rawPrice: pkg.price,
-            planId: pkg.packageType,
-            duration: 'package',
-            description: pkg.description || info.desc,
-            features: pkg.features || [],
-            isPopular: pkg.isPopular,
-            buttonText: pkg.price ? `Choose ${pkg.title}` : 'Contact Us',
-            category: pkg.category
-          };
-        });
+      // Filter Standard vs Custom
+      standardPackages = sanityPackages
+        .filter((pkg: any) => pkg.category === activeCategory && (pkg.section === 'standard' || !pkg.section)) // Default to standard if missing
+        .map((pkg: any) => ({
+          id: pkg._id,
+          title: pkg.title,
+          price: pkg.price ? `₹${pkg.price.toLocaleString('en-IN')}` : 'Contact for Price',
+          rawPrice: pkg.price,
+          planId: pkg.packageType,
+          duration: 'package',
+          description: pkg.description || info.desc,
+          features: pkg.features || [],
+          isPopular: pkg.isPopular,
+          buttonText: pkg.price ? `Choose ${pkg.title}` : 'Contact Us',
+          category: pkg.category,
+          section: 'standard'
+        }));
+
+      customPackages = sanityPackages
+        .filter((pkg: any) => pkg.section === 'custom')
+        .map((pkg: any) => ({
+          id: pkg._id,
+          title: pkg.title,
+          price: pkg.price || 'Flexible',
+          rawPrice: null, // No direct payment for custom usually
+          planId: pkg.packageType,
+          duration: 'variable',
+          description: pkg.description || 'Tailored to your specific needs.',
+          features: pkg.features || [],
+          isPopular: pkg.isPopular,
+          buttonText: 'Inquire Now',
+          category: 'custom',
+          section: 'custom'
+        }));
+
     } else {
       // Fallback
-      packagesToDisplay = MOCK_PACKAGES
+      standardPackages = MOCK_PACKAGES
         .filter(pkg => pkg.category === activeCategory)
         .map(pkg => ({
           id: pkg.id,
@@ -372,66 +388,42 @@ export default function Pricing() {
           features: pkg.features,
           isPopular: pkg.packageType === 'ascend_plus',
           buttonText: `Choose ${pkg.name}`,
-          category: pkg.category
+          category: pkg.category,
+          section: 'standard'
         }));
     }
 
-    // Sort by logical order: base plan first, then premium
+    // Sort Standard
     const planOrder = ['discover', 'discovery_plus', 'achieve', 'achieve_plus', 'ascend', 'ascend_plus'];
-    packagesToDisplay.sort((a: any, b: any) => {
+    standardPackages.sort((a: any, b: any) => {
       const aIndex = planOrder.indexOf(a.planId);
       const bIndex = planOrder.indexOf(b.planId);
-      // If both found in order array, sort by that order
       if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-      // Otherwise fall back to id comparison
       return a.id.localeCompare(b.id);
     });
 
     return {
       heading: info.title,
       subheading: info.subtitle,
-      packages: packagesToDisplay
+      standardPackages,
+      customPackages
     };
   };
 
   if (sanityPackages === null) return null;
 
-  const packageData = getPackageData();
+  const { heading, subheading, standardPackages, customPackages } = getPackageData();
 
   return (
     <section id="pricing" className="py-16 md:py-24 relative overflow-hidden">
-      {/* Animated background */}
+      {/* Background gradients */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-light/30 via-background to-brand-light/20" />
-        <motion.div
-          className="absolute top-1/4 right-0 w-96 h-96 bg-gradient-to-br from-brand-aqua/20 to-transparent rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.2, 0.4, 0.2],
-            x: [0, 50, 0]
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        <motion.div
-          className="absolute bottom-0 left-1/4 w-80 h-80 bg-gradient-to-tr from-brand-teal/15 to-transparent rounded-full blur-3xl"
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.3, 0.6, 0.3],
-            y: [0, -30, 0]
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+        {/* Main Header */}
         <motion.div
           ref={ref}
           className="text-center mb-16"
@@ -439,155 +431,103 @@ export default function Pricing() {
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.8 }}
         >
-          <motion.h2
-            className="fluid-text-5xl font-bold mb-6"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
+          <motion.h2 className="fluid-text-5xl font-bold mb-6">
             <span className="bg-gradient-to-r from-brand-teal via-brand-aqua to-brand-teal bg-clip-text text-transparent">
               Invest in Your Future
             </span>
           </motion.h2>
-          <motion.p
-            className="fluid-text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
-            initial={{ opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            Choose the perfect plan to accelerate your career growth and achieve your professional goals.
+          <motion.p className="fluid-text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Choose the perfect plan to accelerate your career growth.
           </motion.p>
         </motion.div>
 
-        {/* Category Selector Tabs */}
-        <motion.div
-          className="mb-12"
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-            {categories.map((category, index) => (
-              <motion.div
-                key={category.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                transition={{ duration: 0.5, delay: 0.8 + index * 0.1 }}
-                whileHover={{ y: -5 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Card
-                  className={`cursor-pointer transition-all duration-300 ${activeCategory === category.id
-                    ? 'glass-card ring-2 ring-brand-aqua shadow-lg border-brand-aqua/40'
-                    : 'glass-card border-brand-aqua/20 hover:border-brand-aqua/30 hover:shadow-md'
-                    }`}
-                  onClick={() => setActiveCategory(category.id)}
-                  data-testid={`tab-${category.id}`}
-                >
-                  <CardHeader className="text-center p-6">
-                    <CardTitle className={`fluid-text-xl font-bold mb-2 ${activeCategory === category.id
-                      ? 'text-brand-teal'
-                      : 'text-muted-foreground'
-                      }`}>
-                      {category.title}
-                    </CardTitle>
-                    <CardDescription className="fluid-text-sm leading-relaxed">
-                      {category.subtitle}
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Dynamic Content Area */}
-        <motion.div
-          key={activeCategory}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {/* Category Heading */}
+        {/* SECTION 1: Standard Mentoria Packages */}
+        <div className="mb-24">
           <motion.div
-            className="text-center mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <h3 className="fluid-text-3xl font-bold mb-4">
-              <span className="bg-gradient-to-r from-brand-teal via-brand-aqua to-brand-teal bg-clip-text text-transparent">
-                {packageData.heading}
-              </span>
-            </h3>
-            <p className="fluid-text-lg text-muted-foreground">
-              {packageData.subheading}
-            </p>
-          </motion.div>
-
-          {/* Package Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto justify-items-center">
-            {packageData.packages?.map((pkg: any, index: number) => (
-              <PricingCard
-                key={`${activeCategory}-${index}`}
-                title={pkg.title}
-                price={pkg.price}
-                rawPrice={pkg.rawPrice}
-                planId={pkg.planId}
-                duration={pkg.duration}
-                description={pkg.description}
-                features={pkg.features}
-                isPopular={pkg.isPopular}
-                buttonText={pkg.buttonText}
-                packageId={pkg.id}
-                category={pkg.category}
-                index={index}
-              />
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Trust indicators */}
-        <motion.div
-          className="mt-20 text-center"
-          initial={{ opacity: 0, y: 30 }}
-          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.8, delay: 1 }}
-        >
-          <div className="flex flex-wrap justify-center gap-4 mb-6">
-            {[
-              "30-day satisfaction guarantee",
-              "Flexible scheduling",
-              "Online & In-person options",
-              "Certified coaching"
-            ].map((text, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.5, delay: 1.2 + index * 0.1 }}
-              >
-                <Badge
-                  variant="outline"
-                  className="glass-card border-brand-aqua/30 text-brand-teal hover:border-brand-aqua/50 transition-all duration-300 px-4 py-2"
-                >
-                  {text}
-                </Badge>
-              </motion.div>
-            ))}
-          </div>
-          <motion.p
-            className="fluid-text-sm text-muted-foreground"
+            className="mb-12"
             initial={{ opacity: 0 }}
             animate={inView ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.8, delay: 1.6 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
           >
-            All sessions can be conducted online or in-person based on your preference.
-          </motion.p>
-        </motion.div>
-      </div>
+            <h3 className="text-3xl font-bold text-center mb-8 text-brand-dark">Standard Mentoria Packages</h3>
 
-      {/* Payment Contact Modal removed */}
+            {/* Tabs */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-12">
+              {categories.map((category, index) => (
+                <motion.div
+                  key={category.id}
+                  whileHover={{ y: -5 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Card
+                    className={`cursor-pointer transition-all duration-300 ${activeCategory === category.id
+                      ? 'glass-card ring-2 ring-brand-aqua shadow-lg border-brand-aqua/40'
+                      : 'glass-card border-brand-aqua/20 hover:border-brand-aqua/30 hover:shadow-md'
+                      }`}
+                    onClick={() => setActiveCategory(category.id)}
+                  >
+                    <CardHeader className="text-center p-6">
+                      <CardTitle className={`fluid-text-xl font-bold mb-2 ${activeCategory === category.id ? 'text-brand-teal' : 'text-muted-foreground'}`}>
+                        {category.title}
+                      </CardTitle>
+                    </CardHeader>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Standard Packages Grid */}
+            <motion.div
+              key={activeCategory}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto justify-items-center"
+            >
+              {standardPackages.map((pkg: any, index: number) => (
+                <PricingCard
+                  key={`std-${index}`}
+                  {...pkg}
+                  index={index}
+                />
+              ))}
+              {standardPackages.length === 0 && (
+                <div className="col-span-full text-center text-muted-foreground">
+                  No standard packages found for this category.
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        </div>
+
+        {/* SECTION 2: Customize Your Mentorship Plan */}
+        {customPackages.length > 0 && (
+          <motion.div
+            className="mt-24 pt-16 border-t border-brand-aqua/20"
+            initial={{ opacity: 0 }}
+            animate={inView ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            <div className="text-center mb-12">
+              <h3 className="text-3xl font-bold text-brand-dark mb-4">Customize Your Mentorship Plan</h3>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Need something specific? Build a plan that fits your exact requirements.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+              {customPackages.map((pkg: any, index: number) => (
+                <PricingCard
+                  key={`custom-${index}`}
+                  {...pkg}
+                  index={index}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+      </div>
     </section>
   );
 }

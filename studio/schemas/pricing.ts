@@ -9,6 +9,20 @@ export default {
             type: 'string',
         },
         {
+            name: 'section',
+            title: 'Section',
+            type: 'string',
+            description: 'Where should this package appear?',
+            options: {
+                list: [
+                    { title: 'Standard Mentoria Packages', value: 'standard' },
+                    { title: 'Customize Your Mentorship Plan', value: 'custom' },
+                ],
+                layout: 'radio'
+            },
+            initialValue: 'standard'
+        },
+        {
             name: 'packageType',
             title: 'Package Type ID',
             type: 'string',
@@ -28,7 +42,7 @@ export default {
             name: 'price',
             title: 'Price',
             type: 'string',
-            description: 'Display price (e.g., 5,500)',
+            description: 'Display price (e.g., 5,500). Leave empty for "Contact us".',
         },
         {
             name: 'description',
@@ -49,8 +63,9 @@ export default {
         },
         {
             name: 'category',
-            title: 'Category',
+            title: 'Category (Standard Packages Only)',
             type: 'string',
+            description: 'Only relevant if Section is "Standard"',
             options: {
                 list: [
                     { title: 'Freshers', value: 'freshers' },

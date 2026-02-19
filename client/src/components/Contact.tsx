@@ -48,18 +48,19 @@ export default function Contact() {
     },
     onSuccess: () => {
       toast({
-        title: "Message sent successfully!",
-        description: "Thank you for your inquiry. Roy will get back to you within 24 hours.",
+        title: "Message Prepared!",
+        description: "Opening your email client to send the message...",
         className: "bg-green-600 text-white border-none"
       });
       setFormData({ name: '', email: '', phone: '', message: '' });
     },
     onError: (error: Error) => {
       console.error('Contact form error:', error);
+      // Even if DB save fails, we still try to open mailto
       toast({
-        title: "Failed to send message",
-        description: "There was an error sending your message. Please try again or contact us directly.",
-        variant: "destructive",
+        title: "Opening Email Client",
+        description: "Please send the email that opens.",
+        variant: "default",
       });
     }
   });
@@ -77,7 +78,22 @@ export default function Contact() {
       return;
     }
 
+    // 1. Submit to DB (Backup) - Fire and forget mostly, but we use mutation to track state
     contactMutation.mutate(formData);
+
+    // 2. Open Mail Client (Primary)
+    const subject = encodeURIComponent(`New Inquiry from ${formData.name}`);
+    const body = encodeURIComponent(
+      `Name: ${formData.name}\n` +
+      `Email: ${formData.email}\n` +
+      `Phone: ${formData.phone}\n\n` +
+      `Message:\n${formData.message}`
+    );
+
+    // Slight delay to ensure user sees the button click feedback
+    setTimeout(() => {
+      window.location.href = `mailto:royjohnson@careerplans.pro?subject=${subject}&body=${body}`;
+    }, 500);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -277,16 +293,6 @@ export default function Contact() {
                             Send Message
                             <Send className="w-4 h-4" />
                           </span>
-                          <motion.div
-                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-                            animate={{ x: ['-100%', '100%'] }}
-                            transition={{
-                              duration: 1.5,
-                              repeat: Infinity,
-                              repeatDelay: 2,
-                              ease: "easeInOut"
-                            }}
-                          />
                         </>
                       )}
                     </Button>
