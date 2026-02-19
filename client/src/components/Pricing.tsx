@@ -112,7 +112,7 @@ function PricingCard({ title, price, rawPrice, planId, duration, description, fe
 }
 
 // Custom ListItem Component for the "Custom" section list view
-function CustomListItem({ pkg, index, onSelect }: { pkg: any, index: number, onSelect: () => void }) {
+function CustomListItem({ pkg, index, onBuy }: { pkg: any, index: number, onBuy: () => void }) {
   const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: true });
 
   return (
@@ -143,11 +143,10 @@ function CustomListItem({ pkg, index, onSelect }: { pkg: any, index: number, onS
 
       <div className="flex-shrink-0 md:self-center mt-2 md:mt-0 w-full md:w-auto">
         <Button
-          variant="outline"
-          className="w-full md:w-auto border-brand-teal/20 text-brand-teal hover:bg-brand-teal hover:text-white"
-          onClick={onSelect}
+          className="w-full md:w-auto bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white shadow-md hover:shadow-lg transition-all"
+          onClick={onBuy}
         >
-          Select
+          Buy Now
         </Button>
       </div>
     </motion.div>
@@ -277,8 +276,8 @@ export default function Pricing() {
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
                 className={`py-4 px-2 rounded-xl text-sm md:text-base font-bold transition-all duration-300 border ${activeCategory === cat.id
-                    ? 'bg-brand-teal text-white border-brand-teal shadow-lg scale-105'
-                    : 'bg-white/50 text-muted-foreground border-brand-aqua/20 hover:border-brand-aqua hover:bg-white'
+                  ? 'bg-brand-teal text-white border-brand-teal shadow-lg scale-105'
+                  : 'bg-white/50 text-muted-foreground border-brand-aqua/20 hover:border-brand-aqua hover:bg-white'
                   }`}
               >
                 {cat.title}
@@ -329,8 +328,10 @@ export default function Pricing() {
                   key={pkg.id}
                   pkg={pkg}
                   index={idx}
-                  onSelect={() => {
-                    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+                  onBuy={() => {
+                    // Extract numeric price from string like "₹1,500"
+                    const price = parseInt(pkg.price.replace(/[^\d]/g, ''), 10);
+                    handleBuy(pkg.planId, pkg.title, price);
                   }}
                 />
               ))}

@@ -155,7 +155,16 @@ export default {
                     "pkg-5": 6499,   // Ascend Online (Graduates)
                     "pkg-6": 10599,  // Ascend Plus+ (Graduates)
                     "mp-3": 6499,    // Ascend Online (Professionals)
-                    "mp-2": 10599    // Ascend Plus+ (Professionals)
+                    "mp-2": 10599,   // Ascend Plus+ (Professionals)
+
+                    // Custom Packages
+                    "career-report": 1500,
+                    "career-report-counselling": 3000,
+                    "knowledge-gateway": 100,
+                    "one-to-one-session": 3500,
+                    "college-admission-planning": 3000,
+                    "exam-stress-management": 1000,
+                    "cap-100": 199
                 };
 
                 const basePrice = PRICING_CONFIG[planId];
