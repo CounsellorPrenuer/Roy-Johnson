@@ -26,17 +26,7 @@ export default {
             name: 'packageType',
             title: 'Package Type ID',
             type: 'string',
-            description: 'Used to map to the correct Razorpay button (e.g., discover, discovery_plus, achieve, achieve_plus, ascend, ascend_plus)',
-            options: {
-                list: [
-                    { title: 'Discover', value: 'discover' },
-                    { title: 'Discovery Plus', value: 'discovery_plus' },
-                    { title: 'Achieve', value: 'achieve' },
-                    { title: 'Achieve Plus', value: 'achieve_plus' },
-                    { title: 'Ascend', value: 'ascend' },
-                    { title: 'Ascend Plus', value: 'ascend_plus' },
-                ],
-            },
+            description: 'Unique ID for the package (e.g., discover, career-report). Used for payments.',
         },
         {
             name: 'price',
@@ -68,11 +58,20 @@ export default {
             description: 'Only relevant if Section is "Standard"',
             options: {
                 list: [
-                    { title: 'Freshers', value: 'freshers' },
-                    { title: 'Middle Management', value: 'middle-management' },
-                    { title: 'Senior Professionals', value: 'senior-professionals' },
+                    { title: 'Class 8th-9th', value: 'class-8-9' },
+                    { title: 'Class 10th-12th', value: 'class-10-12' },
+                    { title: 'Graduates', value: 'graduates' },
+                    { title: 'Working Professionals', value: 'working-professionals' },
                 ],
             },
         },
+        {
+            name: 'image',
+            title: 'Package Image',
+            type: 'image',
+            options: {
+                hotspot: true,
+            },
+        }
     ],
 }

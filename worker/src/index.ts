@@ -139,12 +139,23 @@ export default {
                 const { planId, currency, couponCode } = requestBody;
 
                 const PRICING_CONFIG: Record<string, number> = {
+                    // Legacy IDs
                     "discover": 5500,
                     "discovery_plus": 15000,
                     "achieve": 5999,
                     "achieve_plus": 10599,
                     "ascend": 19999,
-                    "ascend_plus": 29999
+                    "ascend_plus": 29999,
+
+                    // New Standard IDs (V2)
+                    "pkg-1": 5500,   // Discover (8-9)
+                    "pkg-2": 15000,  // Discover Plus+ (8-9)
+                    "pkg-3": 5999,   // Achieve Online (10-12)
+                    "pkg-4": 10599,  // Achieve Plus+ (10-12)
+                    "pkg-5": 6499,   // Ascend Online (Graduates)
+                    "pkg-6": 10599,  // Ascend Plus+ (Graduates)
+                    "mp-3": 6499,    // Ascend Online (Professionals)
+                    "mp-2": 10599    // Ascend Plus+ (Professionals)
                 };
 
                 const basePrice = PRICING_CONFIG[planId];

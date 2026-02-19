@@ -47,21 +47,11 @@ export default function Contact() {
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Message Prepared!",
-        description: "Opening your email client to send the message...",
-        className: "bg-green-600 text-white border-none"
-      });
+      // Toast handled in submit for better UX flow with mailto
       setFormData({ name: '', email: '', phone: '', message: '' });
     },
     onError: (error: Error) => {
       console.error('Contact form error:', error);
-      // Even if DB save fails, we still try to open mailto
-      toast({
-        title: "Opening Email Client",
-        description: "Please send the email that opens.",
-        variant: "default",
-      });
     }
   });
 
@@ -78,10 +68,7 @@ export default function Contact() {
       return;
     }
 
-    // 1. Submit to DB (Backup) - Fire and forget mostly, but we use mutation to track state
-    contactMutation.mutate(formData);
-
-    // 2. Open Mail Client (Primary)
+    // 1. Open Mail Client (Primary - Immediate Action)
     const subject = encodeURIComponent(`New Inquiry from ${formData.name}`);
     const body = encodeURIComponent(
       `Name: ${formData.name}\n` +
@@ -90,10 +77,17 @@ export default function Contact() {
       `Message:\n${formData.message}`
     );
 
-    // Slight delay to ensure user sees the button click feedback
-    setTimeout(() => {
-      window.location.href = `mailto:royjohnson@careerplans.pro?subject=${subject}&body=${body}`;
-    }, 500);
+    // Trigger mailto immediately to avoid popup blockers
+    window.location.href = `mailto:royjohnson@careerplans.pro?subject=${subject}&body=${body}`;
+
+    // 2. Submit to DB (Background)
+    contactMutation.mutate(formData);
+
+    toast({
+      title: "Opening Email Client...",
+      description: "Please send the pre-filled email.",
+      className: "bg-brand-teal text-white border-none"
+    });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

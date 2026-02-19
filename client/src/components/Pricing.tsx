@@ -3,12 +3,9 @@ import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Check, Star, Sparkles, Loader2, ArrowRight } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Check, Star, Sparkles, ArrowRight, Loader2 } from 'lucide-react';
 import { client } from '@/lib/sanity';
-import { MOCK_PACKAGES } from '@/lib/mock_data';
+import CheckoutModal from './CheckoutModal';
 
 interface PricingCardProps {
   title: string;
@@ -21,85 +18,15 @@ interface PricingCardProps {
   isPopular?: boolean;
   buttonText: string;
   index: number;
-  packageId: string;
-  category: string;
   section: 'standard' | 'custom';
+  onBuy: (planId: string, title: string, price: number) => void;
 }
 
-function PricingCard({ title, price, rawPrice, planId, duration, description, features, isPopular, buttonText, index, section }: PricingCardProps) {
+function PricingCard({ title, price, rawPrice, planId, duration, description, features, isPopular, buttonText, index, section, onBuy }: PricingCardProps) {
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
   });
-
-  const { toast } = useToast();
-  const [couponCode, setCouponCode] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const handlePayment = async () => {
-    if (!planId) return;
-
-    setIsProcessing(true);
-    try {
-      const workerUrl = import.meta.env.VITE_API_BASE_URL || "https://careerplans-worker.garyphadale.workers.dev";
-      if (!workerUrl) throw new Error("API URL not configured");
-
-      // 1. Create Order on Server
-      const res = await fetch(`${workerUrl}/create-order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          planId,
-          currency: "INR",
-          couponCode: couponCode || null
-        })
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error("[PAYMENT] Backend error:", errorData);
-        throw new Error(errorData.error || `Server error: ${res.status}`);
-      }
-
-      const data = await res.json();
-
-      // 2. Open Razorpay
-      const options = {
-        key: data.key_id,
-        amount: data.amount * 100, // Razorpay uses paise
-        currency: data.currency,
-        name: "Career Plans",
-        description: `Payment for ${title}`,
-        order_id: data.order_id,
-        handler: function (response: any) {
-          toast({
-            title: "Payment Successful!",
-            description: `Payment ID: ${response.razorpay_payment_id}. You will receive a confirmation email shortly.`,
-            variant: "default",
-            className: "bg-green-600 text-white border-none"
-          });
-          setCouponCode("");
-        },
-        theme: {
-          color: "#0F766E"
-        }
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-
-    } catch (error) {
-      console.error("[PAYMENT] Caught error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to process payment";
-      toast({
-        title: "Payment Error",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   return (
     <motion.div
@@ -115,150 +42,67 @@ function PricingCard({ title, price, rawPrice, planId, duration, description, fe
         y: -10,
         transition: { duration: 0.3 }
       }}
-      className={`relative ${isPopular ? 'scale-110 z-10' : ''}`}
+      className={`relative h-full ${isPopular ? 'scale-105 z-10' : ''}`}
     >
       <Card className={`relative overflow-hidden transition-all duration-500 hover:shadow-2xl h-full flex flex-col ${isPopular
         ? 'glass-card ring-2 ring-brand-aqua shadow-xl'
         : 'glass-card border-brand-aqua/20 hover:border-brand-aqua/40'
         }`}>
-        {/* Animated gradient background for popular card */}
+        {/* Popular Badge */}
         {isPopular && (
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-br from-brand-teal/5 via-brand-aqua/5 to-brand-teal/5"
-            animate={{
-              background: [
-                'linear-gradient(45deg, rgba(0,55,82,0.05) 0%, rgba(64,143,164,0.05) 50%, rgba(0,55,82,0.05) 100%)',
-                'linear-gradient(45deg, rgba(64,143,164,0.05) 0%, rgba(0,55,82,0.05) 50%, rgba(64,143,164,0.05) 100%)',
-                'linear-gradient(45deg, rgba(0,55,82,0.05) 0%, rgba(64,143,164,0.05) 50%, rgba(0,55,82,0.05) 100%)'
-              ]
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
+          <div className="absolute top-0 right-0 bg-brand-aqua text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-20">
+            Most Popular
+          </div>
         )}
 
-        {isPopular && (
-          <motion.div
-            className="absolute top-0 left-0 right-0"
-            initial={{ y: -20, opacity: 0 }}
-            animate={inView ? { y: 0, opacity: 1 } : { y: -20, opacity: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.15 + 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-          >
-            <div className="bg-gradient-to-r from-brand-teal to-brand-aqua text-white text-center py-3 text-sm font-medium relative overflow-hidden">
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                animate={{ x: ['-100%', '100%'] }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatDelay: 3,
-                  ease: "easeInOut"
-                }}
-              />
-              <Star className="w-4 h-4 inline mr-2" />
-              Most Popular
-              <Sparkles className="w-4 h-4 inline ml-2" />
-            </div>
-          </motion.div>
-        )}
-
-        <CardHeader className={`text-center relative z-10 ${isPopular ? 'pt-16' : 'pt-6'}`}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.4, delay: index * 0.15 + 0.3, ease: [0.68, -0.55, 0.265, 1.55] }}
-          >
-            <CardTitle className="fluid-text-2xl font-bold text-brand-teal mb-6">{title}</CardTitle>
-            <div className="mb-6">
-              <motion.span
-                className="fluid-text-4xl font-bold bg-gradient-to-r from-brand-teal to-brand-aqua bg-clip-text text-transparent"
-                animate={isPopular ? {
-                  scale: [1, 1.05, 1]
-                } : {}}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                {price}
-              </motion.span>
-              <span className="text-muted-foreground fluid-text-base">/{duration}</span>
-            </div>
-            <CardDescription className="text-muted-foreground leading-relaxed fluid-text-sm">
-              {description}
-            </CardDescription>
-          </motion.div>
+        <CardHeader className={`text-center relative z-10 ${isPopular ? 'pt-12' : 'pt-6'}`}>
+          <CardTitle className="fluid-text-2xl font-bold text-brand-teal mb-4 h-16 flex items-center justify-center">{title}</CardTitle>
+          <div className="mb-4">
+            <span className="fluid-text-3xl font-bold bg-gradient-to-r from-brand-teal to-brand-aqua bg-clip-text text-transparent">
+              {price}
+            </span>
+            {duration && <span className="text-muted-foreground text-sm">/{duration}</span>}
+          </div>
+          {/* Subgroup/Description */}
+          <CardDescription className="text-muted-foreground leading-relaxed text-sm min-h-[3rem]">
+            {description}
+          </CardDescription>
         </CardHeader>
 
-        <CardContent className="pt-0 relative z-10 flex-grow">
-          <ul className="space-y-4 mb-8">
+        <CardContent className="pt-0 relative z-10 flex-grow flex flex-col">
+          {/* Divider */}
+          <div className="w-full h-px bg-brand-aqua/10 mb-6"></div>
+
+          <ul className="space-y-3 mb-8 flex-grow">
             {features.map((feature, featureIndex) => (
-              <motion.li
-                key={featureIndex}
-                className="flex items-start gap-3"
-                initial={{ opacity: 0, x: -20 }}
-                animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
-                transition={{
-                  duration: 0.3,
-                  delay: index * 0.15 + featureIndex * 0.06 + 0.4,
-                  ease: [0.25, 0.46, 0.45, 0.94]
-                }}
-              >
-                <motion.div
-                  whileHover={{ scale: 1.2, rotate: 360 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Check className="w-5 h-5 text-brand-aqua flex-shrink-0 mt-0.5" />
-                </motion.div>
-                <span className="text-muted-foreground fluid-text-sm">{feature}</span>
-              </motion.li>
+              <li key={featureIndex} className="flex items-start gap-3">
+                <Check className="w-4 h-4 text-brand-aqua flex-shrink-0 mt-1" />
+                <span className="text-muted-foreground text-sm text-left">{feature}</span>
+              </li>
             ))}
           </ul>
 
-          <div className="w-full flex-col space-y-3 mt-auto">
+          <div className="mt-auto space-y-3">
             {section === 'custom' ? (
               <Button
                 className="w-full bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"
                 onClick={() => {
-                  // Scroll to contact form or open mailto
                   document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
                 }}
               >
-                {buttonText} <ArrowRight className="ml-2 w-4 h-4" />
+                Inquire Now <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             ) : rawPrice ? (
-              <>
-                <Input
-                  placeholder="Coupon Code (Optional)"
-                  value={couponCode}
-                  onChange={(e: any) => setCouponCode(e.target.value)}
-                  disabled={isProcessing}
-                  className="text-center border-brand-teal/20 focus-visible:ring-brand-teal"
-                />
-                <Button
-                  className="w-full bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                  onClick={handlePayment}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    buttonText
-                  )}
-                </Button>
-                <p className="text-xs text-center text-muted-foreground">
-                  Secure payment via Razorpay
-                </p>
-              </>
+              <Button
+                className="w-full bg-gradient-to-r from-brand-teal to-brand-aqua hover:from-brand-teal/90 hover:to-brand-aqua/90 text-white font-semibold py-6 shadow-lg hover:shadow-xl transition-all duration-300"
+                onClick={() => onBuy(planId, title, rawPrice)}
+              >
+                {buttonText}
+              </Button>
             ) : (
-              <Button className="w-full" variant="outline">Contact for Pricing</Button>
+              <Button className="w-full" variant="outline" onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}>
+                Contact for Pricing
+              </Button>
             )}
           </div>
         </CardContent>
@@ -267,14 +111,62 @@ function PricingCard({ title, price, rawPrice, planId, duration, description, fe
   );
 }
 
+// Custom ListItem Component for the "Custom" section list view
+function CustomListItem({ pkg, index, onSelect }: { pkg: any, index: number, onSelect: () => void }) {
+  const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: true });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, x: -20 }}
+      animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+      transition={{ delay: index * 0.1, duration: 0.4 }}
+      className="flex flex-col md:flex-row items-start md:items-center gap-4 p-6 glass-card border-brand-aqua/10 hover:border-brand-aqua/30 transition-all duration-300 rounded-xl mb-4 group hover:shadow-md"
+    >
+      <div className="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full bg-brand-teal/10 text-brand-teal font-bold text-xl group-hover:bg-brand-aqua/20 transition-colors">
+        {index + 1}
+      </div>
+
+      <div className="flex-grow min-w-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2">
+          <h4 className="text-lg font-bold text-brand-dark group-hover:text-brand-teal transition-colors">
+            {pkg.title}
+          </h4>
+          <span className="inline-block px-3 py-1 bg-brand-aqua/10 text-brand-teal rounded-full text-sm font-bold whitespace-nowrap">
+            {pkg.price}
+          </span>
+        </div>
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {pkg.description}
+        </p>
+      </div>
+
+      <div className="flex-shrink-0 md:self-center mt-2 md:mt-0 w-full md:w-auto">
+        <Button
+          variant="outline"
+          className="w-full md:w-auto border-brand-teal/20 text-brand-teal hover:bg-brand-teal hover:text-white"
+          onClick={onSelect}
+        >
+          Select
+        </Button>
+      </div>
+    </motion.div>
+  )
+}
+
+
 export default function Pricing() {
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: true,
   });
 
-  const [activeCategory, setActiveCategory] = useState<'freshers' | 'middle-management' | 'senior-professionals'>('freshers');
+  const [activeCategory, setActiveCategory] = useState<string>('class-8-9');
   const [sanityPackages, setSanityPackages] = useState<any[] | null>(null);
+
+  // Checkout Modal State
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<{ planId: string, title: string, price: number } | null>(null);
 
   useEffect(() => {
     const fetchPricing = async () => {
@@ -292,138 +184,73 @@ export default function Pricing() {
   }, []);
 
   const categories = [
-    {
-      id: 'freshers' as const,
-      title: 'Freshers',
-      subtitle: 'Strategic career foundation & professional readiness'
-    },
-    {
-      id: 'middle-management' as const,
-      title: 'Middle Management',
-      subtitle: 'Leadership development & strategic advancement'
-    },
-    {
-      id: 'senior-professionals' as const,
-      title: 'Senior Professionals',
-      subtitle: 'Executive transformation & C-suite positioning'
-    }
+    { id: 'class-8-9', title: 'Class 8th-9th', subtitle: '8-9 Students' },
+    { id: 'class-10-12', title: 'Class 10th-12th', subtitle: '10-12 Students' },
+    { id: 'graduates', title: 'Graduates', subtitle: 'Graduates' },
+    { id: 'working-professionals', title: 'Working Professionals', subtitle: 'Working Professionals' }
   ];
 
-  const getPackageData = () => {
-    const getCategoryInfo = (cat: string) => {
-      switch (cat) {
-        case 'senior-professionals':
-          return {
-            title: 'Standard Packages for Senior Professionals',
-            subtitle: 'Executive transformation & C-suite positioning',
-            desc: 'For Senior Executives'
-          };
-        case 'middle-management':
-          return {
-            title: 'Standard Packages for Middle Management',
-            subtitle: 'Leadership development & strategic advancement',
-            desc: 'For Working Professionals'
-          };
-        default:
-          return {
-            title: 'Standard Packages for Freshers',
-            subtitle: 'Strategic career foundation & professional readiness',
-            desc: 'For College Graduates'
-          };
-      }
-    };
+  const getFilteredPackages = () => {
+    if (!sanityPackages) return { standard: [], custom: [] };
 
-    const info = getCategoryInfo(activeCategory);
-    let standardPackages = [];
-    let customPackages = [];
+    // Standard Packages
+    const standard = sanityPackages
+      .filter((pkg: any) => pkg.category === activeCategory && (pkg.section === 'standard' || !pkg.section))
+      .map((pkg: any) => ({
+        id: pkg._id,
+        title: pkg.title,
+        price: pkg.price ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Contact',
+        rawPrice: Number(pkg.price),
+        planId: pkg.packageType,
+        duration: '',
+        description: categories.find(c => c.id === activeCategory)?.subtitle || '',
+        features: pkg.features || [],
+        isPopular: pkg.isPopular,
+        buttonText: 'Buy Now',
+        section: 'standard'
+      }))
+      .sort((a: any, b: any) => a.rawPrice - b.rawPrice);
 
-    if (sanityPackages && sanityPackages.length > 0) {
-      // Filter Standard vs Custom
-      standardPackages = sanityPackages
-        .filter((pkg: any) => pkg.category === activeCategory && (pkg.section === 'standard' || !pkg.section)) // Default to standard if missing
-        .map((pkg: any) => ({
-          id: pkg._id,
-          title: pkg.title,
-          price: pkg.price ? `₹${pkg.price.toLocaleString('en-IN')}` : 'Contact for Price',
-          rawPrice: pkg.price,
-          planId: pkg.packageType,
-          duration: 'package',
-          description: pkg.description || info.desc,
-          features: pkg.features || [],
-          isPopular: pkg.isPopular,
-          buttonText: pkg.price ? `Choose ${pkg.title}` : 'Contact Us',
-          category: pkg.category,
-          section: 'standard'
-        }));
+    // Custom Packages
+    const custom = sanityPackages
+      .filter((pkg: any) => pkg.section === 'custom')
+      .map((pkg: any) => ({
+        id: pkg._id,
+        title: pkg.title,
+        price: pkg.price ? `₹${Number(pkg.price).toLocaleString('en-IN')}` : 'Flexible',
+        description: pkg.description,
+        planId: pkg.packageType,
+        section: 'custom'
+      }))
+      .sort((a: any, b: any) => {
+        return parseInt(a.price.replace(/\D/g, '')) - parseInt(b.price.replace(/\D/g, ''));
+      });
 
-      customPackages = sanityPackages
-        .filter((pkg: any) => pkg.section === 'custom')
-        .map((pkg: any) => ({
-          id: pkg._id,
-          title: pkg.title,
-          price: pkg.price || 'Flexible',
-          rawPrice: null, // No direct payment for custom usually
-          planId: pkg.packageType,
-          duration: 'variable',
-          description: pkg.description || 'Tailored to your specific needs.',
-          features: pkg.features || [],
-          isPopular: pkg.isPopular,
-          buttonText: 'Inquire Now',
-          category: 'custom',
-          section: 'custom'
-        }));
-
-    } else {
-      // Fallback
-      standardPackages = MOCK_PACKAGES
-        .filter(pkg => pkg.category === activeCategory)
-        .map(pkg => ({
-          id: pkg.id,
-          title: pkg.name,
-          price: `₹${parseFloat(pkg.price).toLocaleString('en-IN')}`,
-          rawPrice: parseFloat(pkg.price),
-          planId: pkg.packageType,
-          duration: 'package',
-          description: info.desc,
-          features: pkg.features,
-          isPopular: pkg.packageType === 'ascend_plus',
-          buttonText: `Choose ${pkg.name}`,
-          category: pkg.category,
-          section: 'standard'
-        }));
-    }
-
-    // Sort Standard
-    const planOrder = ['discover', 'discovery_plus', 'achieve', 'achieve_plus', 'ascend', 'ascend_plus'];
-    standardPackages.sort((a: any, b: any) => {
-      const aIndex = planOrder.indexOf(a.planId);
-      const bIndex = planOrder.indexOf(b.planId);
-      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-      return a.id.localeCompare(b.id);
-    });
-
-    return {
-      heading: info.title,
-      subheading: info.subtitle,
-      standardPackages,
-      customPackages
-    };
+    return { standard, custom };
   };
 
-  if (sanityPackages === null) return null;
+  const { standard, custom } = getFilteredPackages();
 
-  const { heading, subheading, standardPackages, customPackages } = getPackageData();
+  const handleBuy = (planId: string, title: string, price: number) => {
+    setSelectedPlan({ planId, title, price });
+    setIsCheckoutOpen(true);
+  };
+
+  if (sanityPackages === null) {
+    return (
+      <div className="min-h-[600px] flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-brand-teal" />
+      </div>
+    )
+  }
 
   return (
-    <section id="pricing" className="py-16 md:py-24 relative overflow-hidden">
-      {/* Background gradients */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-light/30 via-background to-brand-light/20" />
-      </div>
+    <section id="pricing" className="py-16 md:py-24 relative overflow-hidden bg-background">
+      <div className="absolute inset-0 bg-gradient-to-br from-brand-light/30 via-background to-brand-light/20 -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
-        {/* Main Header */}
+        {/* Heading */}
         <motion.div
           ref={ref}
           className="text-center mb-16"
@@ -431,103 +258,99 @@ export default function Pricing() {
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
           transition={{ duration: 0.8 }}
         >
-          <motion.h2 className="fluid-text-5xl font-bold mb-6">
+          <h2 className="fluid-text-5xl font-bold mb-6">
             <span className="bg-gradient-to-r from-brand-teal via-brand-aqua to-brand-teal bg-clip-text text-transparent">
-              Invest in Your Future
+              Mentoria Packages
             </span>
-          </motion.h2>
-          <motion.p className="fluid-text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Choose the perfect plan to accelerate your career growth.
-          </motion.p>
+          </h2>
+          <p className="fluid-text-xl text-muted-foreground max-w-3xl mx-auto">
+            Scientifically designed for every stage of your career.
+          </p>
         </motion.div>
 
-        {/* SECTION 1: Standard Mentoria Packages */}
+        {/* STANDARD PACKAGES */}
         <div className="mb-24">
+          {/* Category Tabs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-12 max-w-5xl mx-auto">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`py-4 px-2 rounded-xl text-sm md:text-base font-bold transition-all duration-300 border ${activeCategory === cat.id
+                    ? 'bg-brand-teal text-white border-brand-teal shadow-lg scale-105'
+                    : 'bg-white/50 text-muted-foreground border-brand-aqua/20 hover:border-brand-aqua hover:bg-white'
+                  }`}
+              >
+                {cat.title}
+              </button>
+            ))}
+          </div>
+
+          {/* Packages Grid */}
           <motion.div
-            className="mb-12"
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto"
             initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
           >
-            <h3 className="text-3xl font-bold text-center mb-8 text-brand-dark">Standard Mentoria Packages</h3>
+            {standard.map((pkg: any, idx: number) => (
+              <PricingCard
+                key={pkg.id}
+                {...pkg}
+                index={idx}
+                buttonText="Buy Now"
+                onBuy={handleBuy}
+              />
+            ))}
 
-            {/* Tabs */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-12">
-              {categories.map((category, index) => (
-                <motion.div
-                  key={category.id}
-                  whileHover={{ y: -5 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Card
-                    className={`cursor-pointer transition-all duration-300 ${activeCategory === category.id
-                      ? 'glass-card ring-2 ring-brand-aqua shadow-lg border-brand-aqua/40'
-                      : 'glass-card border-brand-aqua/20 hover:border-brand-aqua/30 hover:shadow-md'
-                      }`}
-                    onClick={() => setActiveCategory(category.id)}
-                  >
-                    <CardHeader className="text-center p-6">
-                      <CardTitle className={`fluid-text-xl font-bold mb-2 ${activeCategory === category.id ? 'text-brand-teal' : 'text-muted-foreground'}`}>
-                        {category.title}
-                      </CardTitle>
-                    </CardHeader>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Standard Packages Grid */}
-            <motion.div
-              key={activeCategory}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto justify-items-center"
-            >
-              {standardPackages.map((pkg: any, index: number) => (
-                <PricingCard
-                  key={`std-${index}`}
-                  {...pkg}
-                  index={index}
-                />
-              ))}
-              {standardPackages.length === 0 && (
-                <div className="col-span-full text-center text-muted-foreground">
-                  No standard packages found for this category.
-                </div>
-              )}
-            </motion.div>
+            {standard.length === 0 && (
+              <div className="col-span-full text-center py-12 text-muted-foreground">
+                No packages available for this category yet.
+              </div>
+            )}
           </motion.div>
         </div>
 
-        {/* SECTION 2: Customize Your Mentorship Plan */}
-        {customPackages.length > 0 && (
-          <motion.div
-            className="mt-24 pt-16 border-t border-brand-aqua/20"
-            initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
+
+        {/* CUSTOM PACKAGES */}
+        {custom.length > 0 && (
+          <div className="mt-24 pt-12 border-t border-brand-aqua/10">
             <div className="text-center mb-12">
-              <h3 className="text-3xl font-bold text-brand-dark mb-4">Customize Your Mentorship Plan</h3>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Need something specific? Build a plan that fits your exact requirements.
+              <h3 className="fluid-text-3xl font-bold text-brand-dark mb-4">Want To Customise Your Mentorship Plan?</h3>
+              <p className="text-muted-foreground max-w-3xl mx-auto">
+                If you want to subscribe to specific services from Mentoria that resolve your career challenges, you can choose one or more of the following:
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-              {customPackages.map((pkg: any, index: number) => (
-                <PricingCard
-                  key={`custom-${index}`}
-                  {...pkg}
-                  index={index}
+            <div className="max-w-5xl mx-auto">
+              {custom.map((pkg: any, idx: number) => (
+                <CustomListItem
+                  key={pkg.id}
+                  pkg={pkg}
+                  index={idx}
+                  onSelect={() => {
+                    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
                 />
               ))}
             </div>
-          </motion.div>
+          </div>
         )}
 
       </div>
+
+      {/* Checkout Modal */}
+      {selectedPlan && (
+        <CheckoutModal
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          planId={selectedPlan.planId}
+          title={selectedPlan.title}
+          price={selectedPlan.price}
+        />
+      )}
+
     </section>
   );
 }
