@@ -131,6 +131,28 @@ export default function CheckoutModal({ isOpen, onClose, planId, title, price }:
                         description: `Payment ID: ${response.razorpay_payment_id}`,
                         className: "bg-green-600 text-white border-none"
                     });
+
+                    // Only trigger mailto for Roy's specific packages or customized logic
+                    const royPackages = [
+                        "career-report", "career-report-counselling",
+                        "knowledge-gateway", "one-to-one-session",
+                        "college-admission-planning", "exam-stress-management", "cap-100",
+                        "test-payment"
+                    ];
+
+                    if (royPackages.includes(planId)) {
+                        const subject = encodeURIComponent(`New Payment Received: ${title}`);
+                        const body = encodeURIComponent(`Hello Roy,\n\nA new payment has been successfully captured for the "${title}" package.\n\nCustomer Details:\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nPayment ID: ${response.razorpay_payment_id}\nAmount: ₹${finalPrice.toLocaleString('en-IN')}\n\nPlease follow up with the client as needed.\n\nBest,\nSystem Notification`);
+
+                        // Create a temporary link to open the mail client
+                        const mailtoLink = document.createElement('a');
+                        mailtoLink.href = `mailto:roy@careerplans.pro?subject=${subject}&body=${body}`;
+                        mailtoLink.target = '_blank';
+                        document.body.appendChild(mailtoLink);
+                        mailtoLink.click();
+                        document.body.removeChild(mailtoLink);
+                    }
+
                     onClose();
                 },
                 theme: { color: "#0F766E" }

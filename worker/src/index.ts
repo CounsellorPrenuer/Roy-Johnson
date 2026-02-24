@@ -72,7 +72,7 @@ async function verifyWebhookSignature(payload: string, signature: string, secret
 export default {
     async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
         const corsHeaders = {
-            "Access-Control-Allow-Origin": "https://careerplans.pro",
+            "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, HEAD, POST, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type, Authorization",
             "Access-Control-Max-Age": "86400",
@@ -164,7 +164,10 @@ export default {
                     "one-to-one-session": 3500,
                     "college-admission-planning": 3000,
                     "exam-stress-management": 1000,
-                    "cap-100": 199
+                    "cap-100": 199,
+
+                    // Test Package (₹1)
+                    "test-payment": 1
                 };
 
                 const basePrice = PRICING_CONFIG[planId];

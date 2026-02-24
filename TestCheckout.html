@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Payment (₹1)</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f3f4f6; flex-direction: column; }
+        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+        button { background-color: #0F766E; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; margin-top: 20px; }
+        button:hover { background-color: #115E59; }
+        button:disabled { background-color: #9CA3AF; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Live ₹1 Test Payment</h2>
+        <p>This will trigger an actual ₹1 payment using your LIVE Cloudflare worker.</p>
+        <button id="payBtn" onclick="pay()">Pay ₹1 Now</button>
+        <p id="status" style="margin-top: 15px; font-size: 14px; color: #4B5563;"></p>
+    </div>
+
+    <script>
+        async function pay() {
+            const btn = document.getElementById('payBtn');
+            const status = document.getElementById('status');
+            btn.disabled = true;
+            status.innerText = "Processing...";
+
+            try {
+                const workerUrl = "https://careerplans-worker.garyphadale.workers.dev";
+
+                // Create Order
+                const res = await fetch(`${workerUrl}/create-order`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        planId: "test-payment",
+                        currency: "INR",
+                        couponCode: null
+                    })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || "Payment processing failed");
+                }
+
+                const data = await res.json();
+
+                // Open Razorpay
+                const options = {
+                    key: data.key_id,
+                    amount: data.amount * 100,
+                    currency: data.currency,
+                    name: "Career Plans Test",
+                    description: "₹1 Test Payment",
+                    order_id: data.order_id,
+                    prefill: {
+                        name: "Test User",
+                        email: "test@example.com",
+                        contact: "9999999999"
+                    },
+                    handler: function (response) {
+                        status.style.color = "green";
+                        status.innerText = `Payment Successful!\nPayment ID: ${response.razorpay_payment_id}`;
+                        alert('Payment successful! Now check if Roy received the email from Razorpay.');
+                    },
+                    theme: { color: "#0F766E" }
+                };
+
+                const rzp = new window.Razorpay(options);
+                rzp.open();
+            } catch (error) {
+                status.style.color = "red";
+                status.innerText = `Error: ${error.message}`;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
