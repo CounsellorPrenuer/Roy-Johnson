@@ -164,10 +164,7 @@ export default {
                     "one-to-one-session": 3500,
                     "college-admission-planning": 3000,
                     "exam-stress-management": 1000,
-                    "cap-100": 199,
-
-                    // Test Package (₹1)
-                    "test-payment": 1
+                    "cap-100": 199
                 };
 
                 const basePrice = PRICING_CONFIG[planId];

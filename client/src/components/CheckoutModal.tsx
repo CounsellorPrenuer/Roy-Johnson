@@ -134,10 +134,14 @@ export default function CheckoutModal({ isOpen, onClose, planId, title, price }:
 
                     // Only trigger mailto for Roy's specific packages or customized logic
                     const royPackages = [
+                        // Custom Packages
                         "career-report", "career-report-counselling",
                         "knowledge-gateway", "one-to-one-session",
                         "college-admission-planning", "exam-stress-management", "cap-100",
-                        "test-payment"
+                        // Legacy Mentoria Packages
+                        "discover", "discovery_plus", "achieve", "achieve_plus", "ascend", "ascend_plus",
+                        // New Standard IDs (V2)
+                        "pkg-1", "pkg-2", "pkg-3", "pkg-4", "pkg-5", "pkg-6", "mp-3", "mp-2"
                     ];
 
                     if (royPackages.includes(planId)) {
